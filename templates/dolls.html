@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_components.html" import market_category_heading, product_card %}
+
+{% block content %}
+{{ market_category_heading('Сакральный маркет · текстильные образы', 'Куклы-мотанки. Защита и тепло предков.', 'Ручная работа и символические образы для пространства заботы, памяти и личного смысла.') }}
+
+<section class="section section--branches" aria-label="Разновидности кукол-мотанок">
+    <div class="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-20">
+        <div class="market-products">
+            {% for item in products %}
+            {{ product_card(item, 'Кукла-мотанка', loop.index) }}
+            {% else %}
+            <p class="empty-events">В этой категории пока нет доступных работ.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

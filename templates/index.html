@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <section class="hero relative flex min-h-[100svh] items-end justify-center overflow-hidden" id="home" aria-labelledby="hero-title">
+            <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Берёза с разноцветными лентами на фоне открытого неба и зелёных холмов">
+            <div class="hero__shade" aria-hidden="true"></div>
+            <div class="hero__content relative z-10 mx-auto w-full max-w-5xl px-6 pb-14 pt-36 text-center sm:pb-20 md:px-10">
+                <h1 id="hero-title" class="display-title mx-auto max-w-4xl text-balance">Древо Эльтои</h1>
+                <section class="branch-links" aria-label="Основные направления">
+                    <div class="branch-links__inner">
+                        <nav class="branch-links__row" aria-label="Перейти к направлениям">
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--games" href="{{ url_for('games') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Игры</span></a></div>
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--mandalas" href="{{ url_for('market_mandalas') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Мандалы</span></a></div>
+                            {# Restore after re-enabling market_trees in app.py:
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--trees" href="{{ url_for('market_trees') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Древа</span></a></div>
+                            #}
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--dolls" href="{{ url_for('market_dolls') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Куклы-мотанки</span></a></div>
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--consultations" href="{{ url_for('consultations') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Консультации</span></a></div>
+                            <div class="branch-link-wrap"><a class="branch-link branch-link--training" href="{{ url_for('obuchenie') }}"><span class="branch-link__loop" aria-hidden="true"></span><span class="branch-link__label">Обучение</span></a></div>
+                        </nav>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section class="section section--branches bg-ink" id="branches" aria-labelledby="branches-title">
+            <div class="mx-auto max-w-7xl bg-ink px-6 py-20 text-paper md:px-10 md:py-28">
+                <div class="mb-10 md:mb-12">
+                    <p class="eyebrow eyebrow--surface">Найди свою ветвь</p>
+                    <h2 id="branches-title" class="section-title mt-4">Выбери свой путь.</h2>
+                </div>
+                <div class="mx-auto grid max-w-5xl gap-4 md:grid-cols-2">
+                    <a class="talk-card talk-card--one" href="{{ url_for('games') }}">
+                        <span class="relative top-5 text-2xl font-medium tracking-tight sm:text-[28px]">Игры</span>
+                        <p class="card-kicker">Онлайн и офлайн</p>
+                        <p>10 трансформационных игр для личных открытий.</p>
+                    </a>
+                    <a class="talk-card talk-card--two" href="{{ url_for('market') }}">
+                        <span class="relative top-5 text-2xl font-medium tracking-tight sm:text-[28px]">Сакральный <br>маркет</span>
+                        <p class="card-kicker">Авторские изделия</p>
+                        <p>Мандалы, древа и куклы ручной работы</p>
+                    </a>
+                    <a class="talk-card talk-card--three" href="{{ url_for('consultations') }}">
+                        <span class="relative top-5 text-2xl font-medium tracking-tight sm:text-[28px]">Консультации</span>
+                        <p class="card-kicker">Один на один · Онлайн</p>
+                        <p>Индивидуальное пространство, чтобы быть услышанным.</p>
+                    </a>
+                    <a class="talk-card talk-card--four" href="{{ url_for('obuchenie') }}">
+                        <span class="relative top-5 text-2xl font-medium tracking-tight sm:text-[28px]">Обучение и <br> Семинар "Раскрытие"</span>
+                        <p class="card-kicker">Обучение проводников игр · Семинар "Раскрытие"</p>
+                        <p>Освойте авторскую методику и инструменты, чтобы самостоятельно проводить 10 трансформационных игр.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+
+        <section class="section section--events" id="events" aria-labelledby="events-title">
+            <div class="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+                <div class="section-heading mb-14 max-w-2xl">
+                    <p class="eyebrow eyebrow--surface">Живой календарь</p>
+                    <h2 id="events-title" class="section-title mt-4">Анонс игр</h2>
+                    <p class="mt-5 max-w-xl text-base leading-7 text-paper/80">Каждая встреча — новая лента на нашем общем древе.</p>
+                </div>
+                {% with empty_events_message='Новые встречи уже готовятся. Напишите нам, чтобы узнать о ближайшем круге.' %}
+                {% include "_event_list.html" %}
+                {% endwith %}
+            </div>
+        </section>
+
+        <section class="section section--events" id="invite" aria-labelledby="invite-title">
+            <div class="relative z-10 mx-auto max-w-3xl px-6 py-28 text-center md:py-40">
+                <p class="eyebrow eyebrow--surface">Приглашение</p>
+                <h2 id="invite-title" class="relative section-title mt-4">Интересно - напиши</h2>
+                <a class="line-button line-button--small mt-7" href="{{ url_for('contact') }}">Написать нам<span aria-hidden="true">↗</span></a>
+            </div>
+        </section>
+{% endblock %}

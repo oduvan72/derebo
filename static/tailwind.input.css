@@ -1,0 +1,7 @@
+@import "@fontsource-variable/caveat";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/space-grotesk";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

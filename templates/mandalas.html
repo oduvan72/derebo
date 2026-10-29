@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_components.html" import market_category_heading, product_card %}
+
+{% block content %}
+{{ market_category_heading('Сакральный маркет · образы для созерцания','Мандалы.<br>Геометрия личной силы.','Каждая работа — авторский предмет и повод остановиться, прислушаться к себе и сформулировать личный смысл.'|safe) }}
+
+<section class="section section--branches" aria-label="Разновидности мандал">
+    <div class="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-20">
+        <form class="product-filter" action="{{ url_for('market_mandalas') }}" method="get">
+            <label for="subcategory">Категория мандалы</label>
+            <select id="subcategory" name="subcategory">
+                <option value="">Все категории</option>
+                {% for subcategory in subcategories %}
+                <option value="{{ subcategory }}" {% if selected_subcategory == subcategory %}selected{% endif %}>{{ subcategory }}</option>
+                {% endfor %}
+            </select>
+            <button class="line-button line-button--small" type="submit">Показать</button>
+        </form>
+
+        <div class="market-products">
+            {% for item in products %}
+            {{ product_card(item, 'Мандала', loop.index) }}
+            {% else %}
+            <p class="empty-events">
+                {% if selected_subcategory %}
+                В категории «{{ selected_subcategory }}» пока нет доступных работ.
+                {% else %}
+                В этой категории пока нет доступных работ.
+                {% endif %}
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

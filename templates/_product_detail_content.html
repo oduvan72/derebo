@@ -1,0 +1,72 @@
+<section class="product-detail section section--roots" aria-labelledby="product-title">
+    <div class="mx-auto max-w-7xl px-6 pb-20 md:px-10 md:pb-28">
+        <a class="line-button line-button--small" href="{{ url_for('market_' + product.category) }}">← Вернуться в категорию</a>
+        
+        <article class="product-detail__article game-detail__content mt-10">
+            <p class="eyebrow eyebrow--surface">Сакральный маркет · авторская работа</p>
+            <h1 class="section-title mt-4 text-center" id="product-title">{{ product.name }}</h1>
+            {% if product.podzagolovok %}
+            <p class="text-center game-detail__intro mt-5">{{ product.podzagolovok }}</p>
+            {% endif %}
+            <div class="product-detail__layout{% if not product_photos %} product-detail__layout--text-only{% endif %} mt-8">
+                {% if product_photos %}
+                <section class="photo-carousel product-detail__image" data-photo-carousel aria-label="Фотографии товара {{ product.name }}" aria-roledescription="карусель" tabindex="0">
+                    <div class="photo-carousel__slides">
+                        <div class="photo-carousel__track">
+                            {% for photo in product_photos %}
+                            <img
+                                class="photo-carousel__slide"
+                                src="{{ url_for('static', filename=photo) }}"
+                                alt="{{ product.name }} — фото {{ loop.index }} из {{ loop.length }}"
+                                draggable="false"
+                            >
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if product_photos  %}
+                    <div class="photo-carousel__controls">
+                        <button class="photo-carousel__button" type="button" data-carousel-prev aria-label="Предыдущее фото">←</button>
+                        <p class="photo-carousel__count" aria-live="polite" data-carousel-count>1 / {{ product_photos|length }}</p>
+                        <button class="photo-carousel__button" type="button" data-carousel-next aria-label="Следующее фото">→</button>
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+                <div class="product-detail__content">
+                    <p style="white-space: pre-wrap;" class="product-detail__description">{{ product.full_description or product.description }}</p>
+                    {% if product.materials or product.dimensions %}
+                    <dl class="product-detail__facts" >
+                        <div>
+                            <dt>Материалы</dt>
+                            {% if product.materials %}
+                            <dd style="white-space: pre-wrap;">{{ product.materials }}</dd>
+                            {% else %}
+                            <p>Подробности о работе можно уточнить при заказе.</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <dt>Размер</dt>
+                            {% if product.dimensions %}
+                            <dd style="white-space: pre-wrap;">{{ product.dimensions }}</dd>
+                            {% else %}
+                            <p>Подробности о работе можно уточнить при заказе.</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <dt>Стоимость</dt>
+                            {% if product.price %}
+                            <dd>{{ product.price }} ₽</dd>
+                            {% else %}
+                            <p>Подробности о работе можно уточнить при заказе.</p>
+                            {% endif %}
+                        </div>
+                    </dl>
+                    {% endif %}
+                    <a class="line-button mt-8" href="{{ url_for('contact', item_type='product', item_id=product.id) }}">
+                        Купить <span aria-hidden="true">↗</span>
+                    </a>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>

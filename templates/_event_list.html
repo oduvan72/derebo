@@ -1,0 +1,19 @@
+<div class="event-list">
+    {% for event in events %}
+    <article class="event-row">
+        <div class="event-ribbon" aria-hidden="true"></div>
+        <p class="event-month">{{ event.date or event.month }}</p>
+        <div class="event-copy">
+            <h3>{{ event.title }}</h3>
+            <p class="event-target">{{ event.target }}</p>
+            <p class="event-description">{{ event.desc }}</p>
+            {% if event.capacity %}
+            <p class="event-target">Свободно мест: {{ event.available_places }} из {{ event.capacity }}</p>
+            {% endif %}
+        </div>
+        <a class="line-button line-button--small" href="{{ event.link }}">Записаться <span aria-hidden="true">↗</span></a>
+    </article>
+    {% else %}
+    <p class="empty-events">{{ empty_events_message }}</p>
+    {% endfor %}
+</div>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="market-hero relative flex min-h-[78svh] items-end justify-center overflow-hidden">
+    <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Дерево с разноцветными лентами на ветвях среди открытого неба и зелёных холмов">
+    <div class="hero__shade" aria-hidden="true"></div>
+    <div class="page-hero__content relative z-10 mx-auto w-full max-w-5xl px-6 pt-36 text-center md:px-10">
+        <p class="eyebrow eyebrow--image mb-5">Предметы и образы · Саха · Тува · Калмыкия</p>
+        <h1 class="display-title mx-auto max-w-4xl text-balance">Сакральный маркет.</h1>
+        <p class="market-hero__subtitle mt-5">Вещи, которые держат опору.</p>
+        <p class="hero__description-glass mx-auto mt-5 max-w-2xl">Авторские образы для дома, личного пространства и внимательного диалога с собой.</p>
+    </div>
+</section>
+
+<section class="section section--roots" aria-labelledby="market-categories-title">
+    <div class="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
+        <div class="section-heading mx-auto mb-14 max-w-3xl text-center">
+            <p class="eyebrow eyebrow--surface">Два направления</p>
+            <h2 class="section-title mt-4" id="market-categories-title">Выбери образ, который откликается.</h2>
+        </div>
+        <div class="market-categories">
+            {% for category in categories %}
+            <article class="market-category market-category--{{ category.tone }}">
+                <div class="market-category__image-wrap">
+                    <img src="{{ url_for('static', filename=category.photo) }}" alt="Визуальная заглушка для категории «{{ category.title }}»" loading="lazy">
+                    <span class="market-category__index">0{{ loop.index }}</span>
+                </div>
+                <div class="market-category__copy">
+                    <p class="card-kicker">Направление / 0{{ loop.index }}</p>
+                    <h3>{{ category.title }}</h3>
+                    <p>{{ category.description }}</p>
+                    <a class="line-button line-button--small mt-6" href="{{ url_for(category.endpoint) }}">{{ category.action }} <span aria-hidden="true">↗</span></a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

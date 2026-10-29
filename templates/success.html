@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section section--roots" aria-labelledby="payment-result-title">
+    <div class="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
+        <p class="eyebrow eyebrow--surface">Заказ #{{ order.id }}</p>
+        {% if payment_state == 'paid' %}
+        <h1 class="section-title mt-4" id="payment-result-title">Оплата принята</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
+            Подтверждение и дальнейшая информация будут отправлены на {{ masked_email }}.
+        </p>
+        {% elif payment_state == 'pickup_paid' %}
+        <h1 class="section-title mt-4" id="payment-result-title">Самовывоз оплачен</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
+            Заказ оплачен при получении. Спасибо!
+        </p>
+        {% elif payment_state == 'pickup_canceled' %}
+        <h1 class="section-title mt-4" id="payment-result-title">Заказ отменён</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
+            Заказ самовывоза отменён. Если это произошло по ошибке, свяжитесь с нами.
+        </p>
+        {% elif payment_state == 'pickup' %}
+        <h1 class="section-title mt-4" id="payment-result-title">Заказ принят</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
+            Самовывоз в Якутске бесплатный. Оплатите заказ при получении.
+            {{ pickup_location }}. Мы свяжемся с вами для согласования места и времени.
+        </p>
+        {% elif payment_state == 'canceled' %}
+        <h1 class="section-title mt-4" id="payment-result-title">Оплата не завершена</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
+            Платёж отменён или не прошёл. Заказ не считается оплаченным. Если списание отображается в банке, пожалуйста, свяжитесь с нами.
+        </p>
+        {% else %}
+        <h1 class="section-title mt-4" id="payment-result-title">Проверяем оплату</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80" id="payment-status-message" role="status" aria-live="polite">
+            ЮKassa ещё подтверждает платёж. Эта страница обновится автоматически; не оплачивайте заказ повторно.
+        </p>
+        {% endif %}
+        <a class="line-button mt-8" href="{{ url_for('home') }}">На главную <span aria-hidden="true">↗</span></a>
+    </div>
+</section>
+{% if payment_state == 'pending' %}
+<script>
+    (() => {
+        const statusUrl = {{ url_for('api_order_status', order_id=order.id, token=return_token)|tojson }};
+        const maskedEmail = {{ masked_email|tojson }};
+        const message = document.getElementById('payment-status-message');
+        const heading = document.getElementById('payment-result-title');
+        const startTime = Date.now();
+
+        const refreshStatus = async () => {
+            try {
+                const response = await fetch(statusUrl, { headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error('Не удалось проверить состояние платежа.');
+                const result = await response.json();
+                if (result.status === 'paid') {
+                    heading.textContent = 'Оплата принята';
+                    message.textContent = `Подтверждение и дальнейшая информация будут отправлены на ${maskedEmail}.`;
+                    return;
+                }
+                if (result.status === 'canceled') {
+                    heading.textContent = 'Оплата не завершена';
+                    message.textContent = 'Платёж отменён или не прошёл. Заказ не считается оплаченным. Если списание отображается в банке, пожалуйста, свяжитесь с нами.';
+                    return;
+                }
+            } catch (error) {
+                message.textContent = 'Не удалось обновить статус. Можно перезагрузить страницу позже.';
+            }
+            if (Date.now() - startTime < 120000) window.setTimeout(refreshStatus, 3000);
+            else message.textContent = 'Платёж ещё обрабатывается. Проверьте статус этой страницы позже — повторная оплата не нужна.';
+        };
+
+        window.setTimeout(refreshStatus, 3000);
+    })();
+</script>
+{% endif %}
+{% endblock %}

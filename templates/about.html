@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_components.html" import page_hero, invitation %}
+
+{% block content %}
+{{ page_hero('Начало пути', 'О методе', '', 'Древо растет из земли к небу. <br>Человек — от своих предков к духу') }}
+
+<section class="section section--author about-author" id="author" aria-labelledby="author-title">
+    <div class="about-author__inner mx-auto max-w-3xl px-6 pt-24 pb-12 md:px-10 md:pt-32 md:pb-16">
+        <div class="about-author__content">
+            <p class="eyebrow eyebrow--surface">Человек за методом</p>
+            <h2 id="author-title" class="section-title mt-4">ДРЕВО ЭЛЬТОИ- это пространство <br>психологической и сакральной трансформации.</h2>
+            <div class="author-image-wrap mt-5">
+                <img class="author-image" src="{{ url_for('static', filename='admin.jpg') }}" alt="Солнечный свет проходит сквозь ветви дерева с лентами">
+            </div>
+            <p class="mt-6 text-base leading-8 text-paper/80 sm:text-lg">
+                Приветствую, меня зовут Ольга Товариштай.<br> Я академический психолог, парапсихолог, подполковник в отставке и автор 10 уникальных трансформационных игр, зарегистрированных в РЦИС Российской Федерации.
+<br>Более 30 лет я работаю с человеческой психикой, телом и духом в условиях силовых структур, государственной службы и частной практики. Мой подход соединяет фундаментальную науку, нейропсихологию и глубокие сакральные методы, без догм, иллюзий и оценочной критики.
+<br>Здесь вы найдете опору и безопасное пространство, чтобы пройти через любой кризис, восстановить силу своего рода, убрать страхи и раскрыть свои истинные дары.
+<br>С чем бы вы ни пришли — у нас есть глубина и инструменты, чтобы найти решение.
+            </p>
+        </div>
+    </div>
+</section>
+<section class="section section--author education-documents" aria-labelledby="education-documents-title">
+    <div class="mx-auto max-w-5xl px-6 py-12 pb-24 md:px-10 md:pt-16 md:pb-32 ">
+        <div class="section-heading max-w-3xl">
+            <p class="eyebrow eyebrow--surface text-center">Образование и квалификация</p>
+            <h2 class="mt-5 section-title mt-3 text-center" id="education-documents-title">Дипломы и удостоверения</h2>
+            <p class="mt-5 max-w-2xl text-base leading-7 text-paper/80 text-center">Документы об образовании и повышении квалификации Ольги Товариштай.</p>
+        </div>
+
+        <div class="photo-carousel" data-photo-carousel aria-label="Дипломы и удостоверения Ольги Товариштай" aria-roledescription="карусель" tabindex="0">
+            <div class="photo-carousel__slides">
+                <div class="photo-carousel__track">
+                    {% for number in range(1, 9, +1) %}
+                    <img
+                        class="photo-carousel__slide"
+                        src="{{ url_for('static', filename='diplom' ~ number ~ '.jpg') }}"
+                        alt="Документ об образовании или повышении квалификации {{ loop.index }} из {{ loop.length }}"
+                    >
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="photo-carousel__controls">
+                <button class="photo-carousel__button" type="button" data-carousel-prev aria-label="Предыдущий документ">←</button>
+                <p class="photo-carousel__count" aria-live="polite" data-carousel-count>1 / 9</p>
+                <button class="photo-carousel__button" type="button" data-carousel-next aria-label="Следующий документ">→</button>
+            </div>
+        </div>
+    </div>
+</section>
+<!--<section class="section section--author">
+    <div class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+        <div class="section-heading max-w-3xl">
+            <p class="eyebrow eyebrow--surface">О нас</p>
+            <h2 class="section-title mt-4">Четыре хранительницы. Один общий круг.</h2>
+        </div>
+        <div class="mt-8 max-w-3xl space-y-5 text-base leading-8 text-paper/80">
+            <p>Метод складывался из живых встреч, практик и внимательного отношения к трём корням — Саха, Туве и Калмыкии.</p>
+            <p>Четыре женщины-хранительницы из Саха помогают беречь язык и контекст традиций. Их имена и истории остаются внутри круга — с их согласия и в выбранной ими мере.</p>
+        </div>
+    </div>
+</section>-->
+
+<section class="section section--events" id="invite" aria-labelledby="invite-title">
+    <div class="relative z-10 mx-auto max-w-3xl px-6 py-28 text-center md:py-40">
+        <p class="eyebrow eyebrow--surface">Приглашение</p>
+        <h2 id="invite-title" class="relative section-title mt-4">Интересно - напиши</h2>
+        <a class="line-button line-button--small mt-7" href="{{ url_for('contact') }}">Написать нам<span aria-hidden="true">↗</span></a>
+    </div>
+</section>
+{% endblock %}

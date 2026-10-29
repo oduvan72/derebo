@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#e8eddf">
+    {% set meta_title = page_title ~ ' — Древо Эльтои' %}
+    {% set meta_description = page_description|default(page_title ~ ' — трансформационные игры и бережная работа с корнями Саха, Тувы и Калмыкии.', true)|striptags|truncate(160, true, '…') %}
+    {% set meta_image = url_for('static', filename=page_image|default('derevo.jpg', true), _external=true) %}
+    <meta name="description" content="{{ meta_description }}">
+    <link rel="canonical" href="{{ request.base_url }}">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Древо Эльтои">
+    <meta property="og:title" content="{{ meta_title }}">
+    <meta property="og:description" content="{{ meta_description }}">
+    <meta property="og:url" content="{{ request.base_url }}">
+    <meta property="og:image" content="{{ meta_image }}">
+    <meta property="og:image:alt" content="{{ page_title }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ meta_title }}">
+    <meta name="twitter:description" content="{{ meta_description }}">
+    <meta name="twitter:image" content="{{ meta_image }}">
+    <meta name="twitter:image:alt" content="{{ page_title }}">
+    <title>{{ meta_title }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tailwind.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-ink text-paper antialiased">
+    <a class="skip-link" href="#main">Перейти к содержанию</a>
+    <header class="site-header fixed inset-x-0 top-0 z-50">
+        <div class="site-header__inner mx-auto flex max-w-[1600px] items-center justify-between px-5 py-4 md:px-8">
+            <a class="brand shrink-0" href="{{ url_for('home') }}" aria-label="Древо Эльтои — на главную">
+                <span class="brand__mark" aria-hidden="true">ДЭ</span>
+                <span class="brand__name">Древо Эльтои</span>
+            </a>
+            <nav class="desktop-nav hidden items-center xl:flex" aria-label="Главная навигация">
+                <a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}aria-current="page"{% endif %}>Главная</a>
+                <a href="{{ url_for('games') }}" {% if request.endpoint in ('games', 'game_detail') %}aria-current="page"{% endif %}>Игры</a>
+                {# Add market_trees back after re-enabling its route in app.py. #}
+                <a href="{{ url_for('market') }}" {% if request.endpoint in ('market', 'market_mandalas', 'market_dolls', 'product_detail') %}aria-current="page"{% endif %}>Маркет</a>
+                <a href="{{ url_for('consultations') }}" {% if request.endpoint == 'consultations' %}aria-current="page"{% endif %}>Консультации</a>
+                <a href="{{ url_for('obuchenie') }}" {% if request.endpoint == 'obuchenie' %}aria-current="page"{% endif %}>Обучение</a>
+                <a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>О нас</a>
+                <a href="{{ url_for('contact') }}" {% if request.endpoint == 'contact' %}aria-current="page"{% endif %}>Написать нам</a>
+            </nav>
+            <details class="mobile-nav xl:hidden">
+                <summary aria-label="Открыть меню"><span></span><span></span><span></span></summary>
+                <nav class="mobile-nav__panel" aria-label="Мобильная навигация">
+                    <a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}aria-current="page"{% endif %}>Главная</a>
+                    <a href="{{ url_for('games') }}" {% if request.endpoint in ('games', 'game_detail') %}aria-current="page"{% endif %}>Игры</a>
+                    {# Add market_trees back after re-enabling its route in app.py. #}
+                    <a href="{{ url_for('market') }}" {% if request.endpoint in ('market', 'market_mandalas', 'market_dolls', 'product_detail') %}aria-current="page"{% endif %}>Сакральный маркет</a>
+                    <a href="{{ url_for('consultations') }}" {% if request.endpoint == 'consultations' %}aria-current="page"{% endif %}>Консультации</a>
+                    <a href="{{ url_for('obuchenie') }}" {% if request.endpoint == 'obuchenie' %}aria-current="page"{% endif %}>Обучение</a>
+                    <a href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>О нас</a>
+                    <a href="{{ url_for('contact') }}" {% if request.endpoint == 'contact' %}aria-current="page"{% endif %}>Написать нам</a>
+                </nav>
+            </details>
+        </div>
+    </header>
+
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10 md:flex-row md:items-end md:justify-between md:px-10">
+            <div>
+                <a class="brand" href="{{ url_for('home') }}">
+                    <span class="brand__mark" aria-hidden="true">ДЭ</span>
+                    <span class="brand__name">Древо Эльтои</span>
+                </a>
+            </div>
+            <div class="footer-contact">
+                <!-- <p class="footer-note mt-4 max-w-md"></p> -->
+                <a href="{{ url_for('contact') }}">Написать нам</a>
+                <div class="mt-2 flex gap-5">
+                    <a href="https://wa.me/79841134495" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                    <a href="https://t.me/Eltoi99999" target="_blank" rel="noopener noreferrer">Telegram</a>
+                </div>
+            </div>
+            <nav class="footer-legal" aria-label="Правовая информация">
+                <a href="{{ url_for('privacy_policy') }}">Политика конфиденциальности и условия заказа</a>
+            </nav>
+            <p class="footer-copyright">© Древо Эльтои</p>
+        </div>
+    </footer>
+    <aside class="storage-notice" id="storage-notice" aria-labelledby="storage-notice-title" aria-describedby="storage-notice-description" hidden>
+        <div class="storage-notice__copy">
+            <h2 id="storage-notice-title">Cookie и рекламную аналитику не используем</h2>
+            <p id="storage-notice-description">Технические данные заказа хранятся в sessionStorage только в этой вкладке.</p>
+            <a href="{{ url_for('privacy_policy') }}#cookies">Подробнее об обработке данных</a>
+        </div>
+        <button class="storage-notice__dismiss" type="button" data-dismiss-storage-notice>Закрыть уведомление</button>
+    </aside>
+    <script>
+        const storageNotice = document.querySelector('#storage-notice');
+        const storageNoticeKey = 'browser-storage-notice-dismissed';
+        try {
+            storageNotice.hidden = sessionStorage.getItem(storageNoticeKey) === '1';
+        } catch {
+            storageNotice.hidden = false;
+        }
+        storageNotice.querySelector('[data-dismiss-storage-notice]').addEventListener('click', () => {
+            storageNotice.hidden = true;
+            try {
+                sessionStorage.setItem(storageNoticeKey, '1');
+            } catch {
+                return;
+            }
+        });
+
+        const header = document.querySelector('.site-header');
+        const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 24);
+        updateHeader();
+        window.addEventListener('scroll', updateHeader, { passive: true });
+
+        document.querySelectorAll('.mobile-nav__panel a').forEach((link) => {
+            link.addEventListener('click', () => link.closest('details').removeAttribute('open'));
+        });
+    </script>
+    <script src="{{ url_for('static', filename='product-spa.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='photo-carousel.js') }}" defer></script>
+</body>
+</html>

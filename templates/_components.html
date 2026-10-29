@@ -1,0 +1,64 @@
+{% macro page_hero(title, eyebrow, core, description='') -%}
+<section class="detail-hero relative flex min-h-[82svh] items-end justify-center overflow-hidden" aria-label="{{ title }}">
+    <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Иллюстративная заглушка: дерево с лентами под открытым небом">
+    <div class="hero__shade" aria-hidden="true"></div>
+    <div class="page-hero__content relative z-10 mx-auto w-full max-w-5xl px-6 pt-36 text-center md:px-10">
+        {% if eyebrow %}<p class="eyebrow eyebrow--image mb-5">{{ eyebrow }}</p>{% endif %}
+        <h1 class="display-title mx-auto max-w-4xl text-balance">{{ title }}</h1>
+        {% if core %}<p class="hero__core mt-5">{{ core }}</p>{% endif %}
+        {% if description %}<p class="hero__description-glass mx-auto mt-5 max-w-2xl">{{ description | safe }}</p>{% endif %}
+    </div>
+</section>
+{%- endmacro %}
+
+{% macro invitation(heading, description, button='Написать нам') -%}
+<section class="section section--invite" aria-label="Приглашение">
+    <img class="invite-image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="" aria-hidden="true">
+    <div class="invite-shade" aria-hidden="true"></div>
+    <div class="relative z-10 mx-auto max-w-3xl px-6 py-24 text-center md:py-32">
+        <p class="eyebrow eyebrow--image">Три корня. Один круг.</p>
+        <h2 class="section-title mt-4">{{ heading }}</h2>
+        <p class="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">{{ description }}</p>
+        <a class="line-button line-button--light mt-8" href="{{ url_for('contact') }}">{{ button }} <span aria-hidden="true">↗</span></a>
+    </div>
+</section>
+{%- endmacro %}
+
+{% macro market_category_heading(eyebrow, title, description) -%}
+<section>
+    <div class="mx-auto max-w-7xl px-6 pt-20 md:px-10 md:pt-28">
+        <a class="line-button line-button--small" href="{{ url_for('market') }}">← Вернуться в маркет</a>
+    </div>
+    <div class="game-detail__content mx-auto max-w-[50rem] px-6 mt-10 md:px-10 md:mt-10">
+        <p class="eyebrow eyebrow--surface text-center">{{ eyebrow }}</p>
+        <h1 class="section-title mt-4 text-center">{{ title | safe }}</h1>
+        <p class="mt-5 text-base leading-8 text-paper/80 text-center">{{ description }}</p>
+    </div>
+</section>
+{%- endmacro %}
+
+{% macro product_card(item, category_label, item_number) -%}
+<article class="product-card">
+    <div class="product-card__image-wrap">
+        <img src="{{ url_for('static', filename=item.photo) }}" alt="Фото-заглушка товара «{{ item.name }}»" loading="lazy">
+        <span class="product-card__number">0{{ item_number }}</span>
+    </div>
+    <div class="product-card__body">
+        {% if item.subcategory == 'vip' %}
+        <p class="eyebrow eyebrow--surface">{{ category_label }} · авторская работа · VIP-артефакт</p>
+        {% elif item.subcategory == 'mini' %}
+        <p class="eyebrow eyebrow--surface">мини {{ category_label }} · авторская работа</p>
+        {% else %}
+        <p class="eyebrow eyebrow--surface">{{ category_label }} · авторская работа</p>
+        {% endif %}
+        <h2 style="display: flex; align-items: center; height: 110px; ">{{ item.name }}</h2>
+        {% if item.description %}
+        <p class="product-card__subtitle">{{ item.description }}</p>
+        {% endif %}
+        <div class="product-card__purchase">
+            <p class="product-card__price">{{ item.price }} ₽</p>
+            <a class="line-button line-button--small" href="{{ url_for('product_detail', product_id=item.id) }}">Подробнее <span aria-hidden="true">↗</span></a>
+        </div>
+    </div>
+</article>
+{%- endmacro %}

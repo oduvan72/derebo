@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% from "_components.html" import page_hero %}
+
+{% block content %}
+{{ page_hero('Оформление заказа' if checkout_item else 'Написать нам', 'Заказ · Якутия' if checkout_item else '', 'Оформите заказ.' if checkout_item else '', ('При доставке товар оплачивается онлайн, а пересылка — отдельно перевозчику по его тарифам. При самовывозе товар можно оплатить при получении.' if checkout_item.item_type == 'product' else 'Заполните данные — после проверки заказа вы перейдёте к безопасной оплате.') if checkout_item else 'Расскажи, что ищешь: игру, встречу или индивидуальный разговор. Мы ответим и поможем сориентироваться.') }}
+
+<section class="section section--roots">
+    <div class="mx-auto grid max-w-7xl gap-12 px-6 py-20 md:grid-cols-[1.1fr_0.9fr] md:px-10 md:py-28">
+        {% if checkout_item %}
+        <section class="contact-aside" aria-labelledby="checkout-title">
+            <p class="eyebrow eyebrow--surface">Заказ</p>
+            <h2 class="section-title mt-4" id="checkout-title">{{ checkout_item.name }}</h2>
+            {% if checkout_item.podzagolovok %}
+            <p class="mt-2">{{ checkout_item.podzagolovok }}</p>
+            {% endif %}
+            {% if checkout_item.can_checkout %}
+            <p class="mt-4 text-lg">{{ checkout_item.unit_price }} ₽{% if checkout_item.item_type == 'game' %} / место{% endif %}</p>
+            <form class="checkout-form mt-6" id="checkout-form"
+                  data-item-type="{{ checkout_item.item_type }}"
+                  data-item-id="{{ checkout_item.item_id }}"
+                  data-unit-price="{{ checkout_item.unit_price }}"
+                  data-api-url="{{ url_for('api_create_order') }}">
+                {% if checkout_item.item_type == 'game' %}
+                <label class="checkout-form__field">
+                    <span>Дата игры</span>
+                    <select name="event_id" required>
+                        <option value="">Выберите событие</option>
+                        {% for event in event_options %}
+                        <option value="{{ event.id }}" data-available="{{ event.available }}"
+                                {% if event.selected %}selected{% endif %}
+                                {% if event.available < 1 %}disabled{% endif %}>
+                            {{ event.date }}{% if event.available < 1 %} — мест нет{% else %} — свободно мест: {{ event.available }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if not event_options %}
+                    <span class="checkout-form__hint">Для этой игры пока нет запланированных событий.</span>
+                    {% endif %}
+                </label>
+                {% endif %}
+                <label class="checkout-form__field">
+                    <span>Ваше имя</span>
+                    <input name="user_name" type="text" autocomplete="name" maxlength="200" required>
+                </label>
+                <label class="checkout-form__field">
+                    <span>Телефон</span>
+                    <input name="user_phone" type="tel" autocomplete="tel" maxlength="20" required>
+                </label>
+                <label class="checkout-form__field">
+                    <span>Email для подтверждения</span>
+                    <input name="user_email" type="email" autocomplete="email" maxlength="120" required>
+                </label>
+                <label class="checkout-form__field">
+                    <span>{% if checkout_item.item_type == 'game' %}Количество мест{% else %}Количество{% endif %}</span>
+                    <input name="quantity" type="number" min="1" step="1" value="1" required>
+                </label>
+                {% if checkout_item.item_type == 'product' %}
+                <label class="checkout-form__field">
+                    <span>Получение заказа</span>
+                    <select name="fulfillment_method" required>
+                        <option value="delivery" selected>Доставка по России — оплата перевозчику отдельно</option>
+                        <option value="pickup">Самовывоз в Якутске — бесплатно, оплата при получении</option>
+                    </select>
+                </label>
+                <p class="checkout-form__hint" data-delivery-info>
+                    Доставка не входит в сумму заказа на сайте и оплачивается покупателем отдельно перевозчику по его тарифам.
+                </p>
+                <label class="checkout-form__field" data-delivery-address>
+                    <span>Адрес доставки</span>
+                    <textarea name="delivery_address" rows="3" maxlength="500"
+                              autocomplete="street-address" required></textarea>
+                    <span class="checkout-form__hint">Укажите регион, город, улицу, дом и квартиру/офис, если есть.</span>
+                </label>
+                <p class="checkout-form__hint" data-pickup-info hidden>
+                    {{ pickup_location }}. Мы свяжемся с вами, чтобы согласовать место и время выдачи.
+                </p>
+                <p class="checkout-form__hint">
+                    Для дистанционной покупки товара надлежащего качества закон предусматривает отказ до передачи
+                    и в течение 7 дней после передачи при сохранении товарного вида и потребительских свойств
+                    (есть исключение для товаров с индивидуально-определёнными свойствами). Если письменная
+                    информация о порядке и сроках возврата не предоставлена при доставке, срок отказа составляет
+                    до 3 месяцев. Деньги возвращаются в течение 10 дней с момента требования, за вычетом расходов
+                    продавца на доставку возвращённого товара. Для товара с недостатками действуют отдельные нормы.
+                    <a href="https://www.consultant.ru/document/cons_doc_LAW_305/" target="_blank"
+                       rel="noopener noreferrer" class="underline underline-offset-4">Статья 26.1 Закона РФ «О защите прав потребителей»</a>.
+                </p>
+                {% endif %}
+                <p class="checkout-form__total" aria-live="polite">Итого: {{ checkout_item.unit_price }} ₽</p>
+                <label class="checkout-consent">
+                    <input name="offer_accepted" type="checkbox" required>
+                    <span>Принимаю условия <a href="{{ url_for('privacy_policy') }}#offer" target="_blank" rel="noopener noreferrer">публичной оферты</a> и правил возврата.</span>
+                </label>
+                <label class="checkout-consent">
+                    <input name="personal_data_consent" type="checkbox" required>
+                    <span>Согласен(на) на обработку персональных данных для оформления и исполнения заказа согласно <a href="{{ url_for('privacy_policy') }}#consent" target="_blank" rel="noopener noreferrer">политике и согласию</a>. Рекламная рассылка не осуществляется.</span>
+                </label>
+                <p class="checkout-form__message" id="checkout-message" role="status" aria-live="polite"></p>
+                <button class="line-button mt-4" type="submit">
+                    <span data-submit-label>
+                        {% if checkout_item.item_type == 'game' %}Перейти к оплате{% else %}Оформить заказ и перейти к оплате{% endif %}
+                    </span>
+                    <span aria-hidden="true">↗</span>
+                </button>
+            </form>
+            {% else %}
+            <p class="mt-5 max-w-md text-base leading-8 text-paper/80">
+                Стоимость пока уточняется. Напишите нам, и мы расскажем о заказе.
+            </p>
+            <a class="line-button mt-6" href="mailto:drevo_eltoi@mail.ru">Уточнить стоимость <span aria-hidden="true">↗</span></a>
+            {% endif %}
+        </section>
+        {% else %}
+
+        {% endif %}
+        <div>
+            <p class="eyebrow eyebrow--surface">Связаться</p>
+            <h2 class="section-title mt-4">Выберите удобный канал.</h2>
+            <p class="mt-5 max-w-md text-base leading-8 text-paper/80">Напишите нам — ответим и поможем сориентироваться.</p>
+            <nav class="contact-cards" aria-label="Способы связи">
+                <a class="contact-card" href="https://t.me/Eltoi99999" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.4 4.6 18.2 20c-.2 1.1-.8 1.4-1.7.9l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.8 8.8-8c.4-.3-.1-.5-.6-.2L6.1 14 1.5 12.6c-1-.3-1-1 .2-1.5L19.6 4c.8-.3 1.6.2 1.8.6Z"/></svg></span>
+                    <span><span class="contact-card__title">Telegram</span><span class="contact-card__description">Написать в чат</span></span>
+                </a>
+                <a class="contact-card" href="https://wa.me/79841134495" target="_blank" rel="noopener noreferrer" aria-label="Написать в WhatsApp">
+                    <span class="contact-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.7a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.4-4.9A8.4 8.4 0 1 1 20.5 11.7Z"/><path d="M8.5 8.1c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.8 1.8c.1.2.1.4 0 .6l-.6.7c-.2.2-.2.4 0 .6.5.9 1.3 1.6 2.2 2 .2.1.4.1.6-.1l.8-.9c.2-.2.4-.3.7-.2l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.1-.6 1.5-.5.5-1.1.7-1.8.6-1-.2-2.2-.7-3.4-1.7-1-.8-1.8-1.9-2.3-3-.4-.9-.4-1.8-.1-2.4Z"/></svg></span>
+                    <span><span class="contact-card__title">WhatsApp</span><span class="contact-card__description">Написать в чат</span></span>
+                </a>
+                <a class="contact-card" href="mailto:drevo_eltoi@mail.ru">
+                    <span class="contact-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span>
+                    <span><span class="contact-card__title">Электронная почта</span><span class="contact-card__description">drevo_eltoi@mail.ru</span></span>
+                </a>
+            </nav>
+        </div>
+        <aside class="contact-aside">
+            <p class="eyebrow eyebrow--surface">Мы рядом</p>
+            <p class="mt-5 max-w-md text-base leading-8 text-paper/80">Мы живём в Якутске и проводим встречи онлайн/офлайн. Возможность очного формата уточняйте при записи.</p>
+        </aside>
+    </div>
+</section>
+{% if checkout_item and checkout_item.can_checkout %}
+<script>
+    (() => {
+        const form = document.getElementById('checkout-form');
+        const message = document.getElementById('checkout-message');
+        if (!form || !message) return;
+
+        const quantityInput = form.elements.quantity;
+        const eventSelect = form.elements.event_id;
+        const fulfillmentSelect = form.elements.fulfillment_method;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const submitLabel = form.querySelector('[data-submit-label]');
+        const totalLabel = form.querySelector('.checkout-form__total');
+        const unitPrice = Number(form.dataset.unitPrice);
+        const isGame = form.dataset.itemType === 'game';
+        const deliveryAddressField = form.querySelector('[data-delivery-address]');
+        const deliveryInfo = form.querySelector('[data-delivery-info]');
+        const pickupInfo = form.querySelector('[data-pickup-info]');
+        let submitting = false;
+        const fallbackRequestKeys = new Map();
+
+        const createRequestKey = () => {
+            if (crypto.randomUUID) return crypto.randomUUID();
+            return Array.from(crypto.getRandomValues(new Uint8Array(24)), (byte) =>
+                byte.toString(16).padStart(2, '0')
+            ).join('');
+        };
+
+        const requestStorageKey = () => [
+            'checkout-request',
+            form.dataset.itemType,
+            form.dataset.itemId,
+            isGame ? eventSelect.value : `product:${fulfillmentSelect.value}`,
+        ].join(':');
+
+        const getIdempotencyKey = (storageKey) => {
+            try {
+                let key = sessionStorage.getItem(storageKey);
+                if (!key) {
+                    key = createRequestKey();
+                    sessionStorage.setItem(storageKey, key);
+                }
+                return key;
+            } catch {
+                if (!fallbackRequestKeys.has(storageKey)) {
+                    fallbackRequestKeys.set(storageKey, createRequestKey());
+                }
+                return fallbackRequestKeys.get(storageKey);
+            }
+        };
+
+        const forgetIdempotencyKey = (storageKey) => {
+            fallbackRequestKeys.delete(storageKey);
+            try {
+                sessionStorage.removeItem(storageKey);
+            } catch {
+                return;
+            }
+        };
+
+        const updateTotal = () => {
+            const quantity = Math.max(1, Number.parseInt(quantityInput.value, 10) || 1);
+            totalLabel.textContent = `Итого: ${(unitPrice * quantity).toLocaleString('ru-RU')} ₽`;
+            submitButton.disabled = false;
+            if (!isGame) {
+                const isPickup = fulfillmentSelect.value === 'pickup';
+                deliveryAddressField.hidden = isPickup;
+                deliveryInfo.hidden = isPickup;
+                form.elements.delivery_address.required = !isPickup;
+                pickupInfo.hidden = !isPickup;
+                submitLabel.textContent = isPickup
+                    ? 'Оформить без предоплаты'
+                    : 'Оформить заказ и перейти к оплате';
+            }
+            if (isGame) {
+                const available = Number(eventSelect.selectedOptions[0]?.dataset.available || 0);
+                quantityInput.max = String(Math.max(available, 1));
+                if (available > 0 && quantity > available) quantityInput.value = String(available);
+                const selectedQuantity = Number.parseInt(quantityInput.value, 10) || 1;
+                submitButton.disabled = !eventSelect.value || available < 1 || selectedQuantity > available;
+            }
+        };
+
+        quantityInput.addEventListener('input', updateTotal);
+        if (isGame) eventSelect.addEventListener('change', updateTotal);
+        if (!isGame) fulfillmentSelect.addEventListener('change', updateTotal);
+        updateTotal();
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (submitting) return;
+            submitting = true;
+            message.textContent = '';
+            submitButton.disabled = true;
+            submitButton.setAttribute('aria-busy', 'true');
+            const storageKey = requestStorageKey();
+            const idempotencyKey = getIdempotencyKey(storageKey);
+            const data = new FormData(form);
+            const quantity = Number.parseInt(data.get('quantity'), 10);
+            const payload = {
+                user_name: data.get('user_name'),
+                user_phone: data.get('user_phone'),
+                user_email: data.get('user_email'),
+                offer_accepted: form.elements.offer_accepted.checked,
+                personal_data_consent: form.elements.personal_data_consent.checked,
+                item_type: form.dataset.itemType,
+                item_id: form.dataset.itemId,
+                quantity,
+                total_price: (
+                    unitPrice * quantity
+                ).toFixed(2),
+            };
+            if (isGame) {
+                payload.event_id = Number(data.get('event_id'));
+            } else {
+                payload.fulfillment_method = data.get('fulfillment_method');
+                if (payload.fulfillment_method === 'delivery') {
+                    payload.delivery_address = data.get('delivery_address');
+                }
+            }
+
+            try {
+                const response = await fetch(form.dataset.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Idempotency-Key': idempotencyKey,
+                    },
+                    body: JSON.stringify(payload),
+                });
+                let result;
+                try {
+                    result = await response.json();
+                } catch {
+                    throw new Error('Сервер вернул некорректный ответ. Попробуйте позже.');
+                }
+                if (
+                    response.status === 409
+                    && ['order_failed', 'order_canceled', 'idempotency_key_reused'].includes(result.code)
+                ) {
+                    forgetIdempotencyKey(storageKey);
+                    message.textContent = 'Предыдущая попытка завершена. Проверьте данные и нажмите кнопку ещё раз.';
+                    return;
+                }
+                if (!response.ok) throw new Error(result.error || 'Не удалось создать заказ.');
+                if (!result.confirmation_url) throw new Error('Платёжная ссылка не получена. Попробуйте позже.');
+                forgetIdempotencyKey(storageKey);
+                window.location.assign(result.confirmation_url);
+            } catch (error) {
+                message.textContent = error instanceof TypeError
+                    ? 'Не удалось соединиться с сервером. Проверьте интернет и попробуйте снова.'
+                    : error.message || 'Не удалось отправить заказ. Попробуйте снова.';
+            } finally {
+                submitting = false;
+                submitButton.removeAttribute('aria-busy');
+                updateTotal();
+            }
+        });
+    })();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="detail-hero obuchenie-hero relative flex min-h-[82svh] items-end justify-center overflow-hidden" aria-labelledby="training-title">
+    <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Дерево с лентами под открытым небом">
+    <div class="hero__shade" aria-hidden="true"></div>
+    <div class="page-hero__content relative z-10 mx-auto w-full max-w-6xl px-6 pt-36 text-center md:px-10">
+        <p class="eyebrow eyebrow--image mb-5">Обучение мастеров<br>проводников игр</p>
+        <h1 class="display-title mx-auto max-w-5xl text-balance">Изучите авторскую методику системы «Древо Эльтои»</h1>
+        <p class="hero__description-glass obuchenie-hero__subtitle mx-auto mt-6 max-w-3xl">Инициация авторского метода.</p>
+    </div>
+</section>
+
+<section class="section section--branches obuchenie-section" aria-labelledby="training-program-title">
+    <div class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+        <div class="obuchenie-intro">
+            <div class="obuchenie-intro__copy">
+                <p class="eyebrow eyebrow--surface">Передача знаний</p>
+                <h2 class="section-title mt-4" id="training-program-title">Освойте авторскую систему и ведите игры самостоятельно.</h2>
+                <p class="mt-6 text-base leading-8 text-paper/80">Игропрактика — это один из самых быстрорастущих рынков в сфере помогающих практик. Сегодня люди ищут ответы не в сухой теории, а через глубокое проживание опыта. Вы можете стать тем мастером, к которому выстраиваются очереди.</p>
+                <p class="mt-5 text-base leading-8 text-paper/80">Ольга, создатель вселенной «Древо Эльтои», открывает передачу ключей к 10 уникальным авторским играм. Это готовая, проверенная временем бизнес-модель «под ключ» для психологов, коучей, тарологов и тех, кто мечтает работать на себя и помогать людям.</p>
+            </div>
+            <div class="obuchenie-intro__details">
+                <h3 class="obuchenie-subheading">Что входит в программу передачи знаний</h3>
+                <ul class="obuchenie-features">
+                    <li class="obuchenie-feature">
+                        <span class="obuchenie-feature__number" aria-hidden="true">01</span>
+                        <div>
+                            <h4>Инструменты Мастера</h4>
+                            <p>Вы получаете оригинальные оцифрованные поля, сакральные колоды и пошаговые алгоритмы ведения всех 10 миров.</p>
+                        </div>
+                    </li>
+                    <li class="obuchenie-feature">
+                        <span class="obuchenie-feature__number" aria-hidden="true">02</span>
+                        <div>
+                            <h4>Методология ведения</h4>
+                            <p>Пошаговое обучение групповой динамике и работе с листами помощника и удержанию безопасного игрового пространства.</p>
+                        </div>
+                    </li>
+                    <li class="obuchenie-feature">
+                        <span class="obuchenie-feature__number" aria-hidden="true">03</span>
+                        <div>
+                            <h4>Бизнес-модуль</h4>
+                            <p>Пошаговый план, как составлять расписание своих игр, работать онлайн из любой точки планеты.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="obuchenie-outcome">
+            <p>Содержание, формат, стоимость и условия участия согласуются заранее. </p>
+            <a class="line-button line-button--small obuchenie-outcome__link" href="{{ url_for('contact') }}">Подробнее <span aria-hidden="true">↗</span></a>
+        </div>
+    </div>
+</section>
+
+<section class="section section--roots obuchenie-section obuchenie-section--seminar" aria-labelledby="seminar-reveal-title">
+    <div class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+        <div class="obuchenie-seminar__header">
+            <p class="eyebrow eyebrow--surface">Семинар · Раскрытие</p>
+            <h2 class="section-title mt-4" id="seminar-reveal-title">Семинар «РАСКРЫТИЕ»: Исцеление личной силы и активация внутренних даров</h2>
+            <p class="obuchenie-seminar__subtitle mt-5">Глубокая психологическая и духовная инициация для тех, кто готов выйти из тени.</p>
+        </div>
+        <div class="obuchenie-intro__copy obuchenie-seminar__copy">
+            <p>Каждый человек приходит в этот мир со своим уникальным набором талантов, ресурсов и сильных качеств. Но часто под грузом рутины, выгорания, чужих ожиданий и страха критики эти дары оказываются заперты глубоко внутри.</p>
+            <p>Семинар «Раскрытие» — это пространство тотальной перезагрузки и сакральной концентрации. Это не лекция, это глубокий практический процесс, направленный на обнаружение вашего истинного масштаба.</p>
+        </div>
+        <div class="obuchenie-seminar__details">
+            <h3 class="obuchenie-subheading">Что вы проживете на семинаре</h3>
+            <ul class="obuchenie-features">
+                <li class="obuchenie-feature">
+                    <span class="obuchenie-feature__number" aria-hidden="true">01</span>
+                    <div>
+                        <h4>Диагностика потенциала</h4>
+                        <p>Мы найдем точку вашего внутреннего застоя и поймем, где заблокирована энергия проявления.</p>
+                    </div>
+                </li>
+                <li class="obuchenie-feature">
+                    <span class="obuchenie-feature__number" aria-hidden="true">02</span>
+                    <div>
+                        <h4>Активация даров рода</h4>
+                        <p>Соединение с генетической памятью предков, принятие силы своей земли и защита семейной системы.</p>
+                    </div>
+                </li>
+                <li class="obuchenie-feature">
+                    <span class="obuchenie-feature__number" aria-hidden="true">03</span>
+                    <div>
+                        <h4>Манифестация талантов</h4>
+                        <p>Мягкая трансформаация, избавление от синдрома самозванца и создание вашего личного маршрута успеха.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="obuchenie-outcome">
+            <p>Вы выйдете с семинара обновленным человеком, с четким пониманием своей уникальности и пошаговой картой проявления своих даров в реальном мире.</p>
+            <a class="line-button obuchenie-cta" href="{{ url_for('contact') }}">Записаться на семинар-инициацию «Раскрытие» <span aria-hidden="true">↗</span></a>
+        </div>
+    </div>
+</section>
+{% endblock %}

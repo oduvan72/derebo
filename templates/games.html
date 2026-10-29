@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_components.html" import page_hero, invitation %}
+
+{% block content %}
+{{ page_hero('Игры, которые открывают путь', 'Авторские трансформационные игры<br>онлайн и офлайн'|safe, '', 'Десять авторских игровых направлений для исследования себя, отношений и семейных корней.') }}
+
+<section class="section section--branches">
+    <div class="mx-auto max-w-5xl px-6 py-20 text-center md:px-10 md:py-28">
+        <div class="section-heading mb-12 max-w-2xl">
+            <p class="eyebrow eyebrow--surface">Каталог</p>
+            <h2 class="section-title mt-4 text-center">Десять игр. <br>У каждой свой путь.</h2>
+        </div>
+        <div class="game-catalog">
+            {% for game in games %}
+            <a class="game-card block rounded-2xl border p-8 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl" href="{{ url_for('game_detail', game_id=game.number) }}" data-game-id="{{ game.number }}" data-spa-link>
+                <p class="game-card__number">{{ game.number|int }}</p>
+                <span class="game-card__line mx-auto" aria-hidden="true"></span>
+                <h3 class="text-center text-xl font-semibold leading-snug md:text-2xl"><strong>{{ game.title }}</strong></h3>
+                <p class="mt-4 text-center text-lg font-medium leading-8">{{ game.desc }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section section--events" aria-labelledby="games-events-title">
+    <div class="mx-auto max-w-7xl px-6 py-20 md:px-10 md:py-28">
+        <div class="section-heading mb-12 max-w-2xl">
+            <p class="eyebrow eyebrow--surface">Ближайшие встречи</p>
+            <h2 class="section-title mt-4" id="games-events-title">Живой календарь игр.</h2>
+        </div>
+        {% with empty_events_message='Расписание новых встреч скоро появится. Напишите нам, чтобы получить приглашение.' %}
+        {% include "_event_list.html" %}
+        {% endwith %}
+    </div>
+</section>
+{% endblock %}
