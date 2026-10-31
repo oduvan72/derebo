@@ -342,6 +342,18 @@ def migrate_order_booking_fields():
             'CREATE UNIQUE INDEX IF NOT EXISTS "ix_order_idempotency_key" '
             'ON "order" ("idempotency_key")'
         ))
+        order_columns = {
+            column['name']
+            for column in inspect(connection).get_columns('order')
+        }
+        for name in (
+            'telegram_notification_status',
+            'telegram_notification_claimed_at',
+        ):
+            if name in order_columns:
+                connection.execute(text(
+                    f'ALTER TABLE "order" DROP COLUMN "{name}"'
+                ))
         link_columns = {
             column['name']
             for column in inspect(connection).get_columns('event_games')
