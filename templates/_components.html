@@ -1,6 +1,6 @@
 {% macro page_hero(title, eyebrow, core, description='') -%}
 <section class="detail-hero relative flex min-h-[82svh] items-end justify-center overflow-hidden" aria-label="{{ title }}">
-    <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Иллюстративная заглушка: дерево с лентами под открытым небом">
+    <img class="hero__image" src="{{ url_for('static', filename='derevo.jpg') }}" alt="Дерево с лентами под открытым небом">
     <div class="hero__shade" aria-hidden="true"></div>
     <div class="page-hero__content relative z-10 mx-auto w-full max-w-5xl px-6 pt-36 text-center md:px-10">
         {% if eyebrow %}<p class="eyebrow eyebrow--image mb-5">{{ eyebrow }}</p>{% endif %}
@@ -40,7 +40,7 @@
 {% macro product_card(item, category_label, item_number) -%}
 <article class="product-card">
     <div class="product-card__image-wrap">
-        <img src="{{ url_for('static', filename=item.photo) }}" alt="Фото-заглушка товара «{{ item.name }}»" loading="lazy">
+        <img src="{{ url_for('static', filename=item.photo) }}" alt="{{ item.name }} — фотография товара" loading="lazy">
         <span class="product-card__number">0{{ item_number }}</span>
     </div>
     <div class="product-card__body">

@@ -12,7 +12,7 @@ from email.message import EmailMessage
 from email.utils import parseaddr
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from flask import Flask, abort, jsonify, render_template, request, session, url_for
+from flask import Flask, Response, abort, jsonify, render_template, request, session, url_for
 from requests.exceptions import RequestException
 from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -1108,6 +1108,13 @@ def home():
 def health():
     db.session.execute(select(1))
     return jsonify({'status': 'ok'})
+
+@app.route('/robots.txt')
+def robots_txt():
+    return Response(
+        'User-agent: *\nAllow: /\nDisallow: /admin\n',
+        mimetype='text/plain',
+    )
 
 @app.route('/games')
 def games():

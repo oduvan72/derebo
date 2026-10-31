@@ -22,7 +22,7 @@
             {% for category in categories %}
             <article class="market-category market-category--{{ category.tone }}">
                 <div class="market-category__image-wrap">
-                    <img src="{{ url_for('static', filename=category.photo) }}" alt="Визуальная заглушка для категории «{{ category.title }}»" loading="lazy">
+                    <img src="{{ url_for('static', filename=category.photo) }}" alt="Категория «{{ category.title }}» — фотография" loading="lazy">
                     <span class="market-category__index">0{{ loop.index }}</span>
                 </div>
                 <div class="market-category__copy">
