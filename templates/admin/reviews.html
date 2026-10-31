@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% from "admin/_pagination.html" import render_pagination %}
+{% block title %}Отзывы{% endblock %}
+{% block content %}
+<h1>Отзывы</h1>
+<p><a class="btn" href="{{ url_for('admin.review_add') }}">+ Добавить отзыв</a></p>
+
+<div class="admin-card">
+    {% if pagination.items %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>№</th><th>Автор</th><th>Текст</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for review in pagination.items %}
+            <tr>
+                <td>{{ review.id }}</td>
+                <td>{{ review.author }}</td>
+                <td>{{ review.body|truncate(120, true, '…') }}</td>
+                <td>
+                    {% if review.is_published %}
+                        <span class="badge badge--paid">Опубликован</span>
+                    {% else %}
+                        <span class="badge badge--pending">Скрыт</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form class="inline-form" method="post" action="{{ url_for('admin.review_toggle_publish', review_id=review.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--small btn--secondary" type="submit">
+                            {{ 'Снять с публикации' if review.is_published else 'Опубликовать' }}
+                        </button>
+                    </form>
+                    <a class="btn btn--small btn--secondary" href="{{ url_for('admin.review_edit', review_id=review.id) }}">Изменить</a>
+                    <form class="inline-form" method="post" action="{{ url_for('admin.review_delete', review_id=review.id) }}" onsubmit="return confirm('Удалить отзыв #{{ review.id }}?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--small btn--danger" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'admin.reviews') }}
+    {% else %}
+    <p>Отзывов пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

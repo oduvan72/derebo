@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать событие' if event else 'Новое событие' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактировать событие «' ~ event.date ~ '»' if event else 'Новое событие' }}</h1>
+
+<div class="admin-card">
+    {% if not all_games %}
+        <p>Сначала <a href="{{ url_for('admin.game_add') }}">добавьте хотя бы одну игру</a>.</p>
+    {% else %}
+    <form class="admin-form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="starts_at">Дата и время *</label>
+        <input type="datetime-local" id="starts_at" name="starts_at" required
+               value="{{ form.get('starts_at', event.starts_at.strftime('%Y-%m-%dT%H:%M') if event and event.starts_at else '') }}">
+        <p class="hint">Время Якутска (UTC+9). Дата должна быть в будущем.</p>
+
+        <label>Игры на событии *</label>
+        {% for game in all_games %}
+        <div class="checkbox-row">
+            <input type="checkbox" id="game_{{ game.id }}" name="game_ids" value="{{ game.id }}"
+                   {% if game.id in selected_game_ids %}checked{% endif %}>
+            <label for="game_{{ game.id }}" style="margin: 0; font-weight: 400;">{{ game.id }} — {{ game.title }}</label>
+        </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ 'Сохранить' if event else 'Добавить событие' }}</button>
+            <a class="btn btn--secondary" href="{{ url_for('admin.events') }}">Отмена</a>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

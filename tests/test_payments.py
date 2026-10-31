@@ -11,10 +11,14 @@ from sqlalchemy import event as sqlalchemy_event, text
 
 _TEST_DIRECTORY = tempfile.TemporaryDirectory(prefix='igri-eltoi5-tests-')
 _TEST_DATABASE = Path(_TEST_DIRECTORY.name) / 'payments.sqlite3'
-os.environ['DATABASE_URL'] = f'sqlite:///{_TEST_DATABASE.as_posix()}'
+os.environ.setdefault('DATABASE_URL', f'sqlite:///{_TEST_DATABASE.as_posix()}')
 os.environ.setdefault('FLASK_SECRET_KEY', 'test-secret-key-that-is-not-used-in-production')
-os.environ.setdefault('TELEGRAM_BOT_TOKEN', '')
-os.environ.setdefault('TELEGRAM_ADMIN_IDS', '')
+os.environ.setdefault('SMTP_HOST', 'smtp.example.test')
+os.environ.setdefault('SMTP_USERNAME', 'orders@example.test')
+os.environ.setdefault('SMTP_APP_PASSWORD', 'test-smtp-password')
+os.environ.setdefault('ADMIN_USERNAME', 'admin')
+os.environ.setdefault('ADMIN_PASSWORD', 'test-admin-password')
+os.environ.setdefault('ADMIN_EMAIL', 'admin@example.test')
 
 import app as site
 from db import (
@@ -78,15 +82,15 @@ class PaymentFlowTests(unittest.TestCase):
             return_value=None,
         )
         self.email_sender = patch.object(site, 'send_customer_email')
-        self.telegram_sender = patch.object(site, 'send_telegram_notification')
+        self.admin_sender = patch.object(site, 'send_admin_email_notification')
         self.payment_create_mock = self.payment_create.start()
         self.payment_find_mock = self.payment_find.start()
         self.email_sender_mock = self.email_sender.start()
-        self.telegram_sender_mock = self.telegram_sender.start()
+        self.admin_sender_mock = self.admin_sender.start()
         self.addCleanup(self.payment_create.stop)
         self.addCleanup(self.payment_find.stop)
         self.addCleanup(self.email_sender.stop)
-        self.addCleanup(self.telegram_sender.stop)
+        self.addCleanup(self.admin_sender.stop)
 
     def tearDown(self):
         with site.app.app_context():
@@ -404,8 +408,8 @@ class PaymentFlowTests(unittest.TestCase):
             )
             self.assertIsNotNone(order.offer_accepted_at)
 
-    def test_telegram_order_notice_excludes_customer_contact_and_address(self):
-        self.telegram_sender.stop()
+    def test_admin_email_notice_contains_order_and_customer_contacts(self):
+        self.admin_sender.stop()
         order_data = {
             'order_id': 12,
             'product_name': 'Тестовый товар',
@@ -421,23 +425,22 @@ class PaymentFlowTests(unittest.TestCase):
             'delivery_fee': 0,
         }
 
-        with (
-            patch.object(site, 'TELEGRAM_ADMIN_IDS', [123]),
-            patch.object(site, 'send_admin_message') as send_message,
-        ):
-            site.send_telegram_notification(order_data)
+        with patch.object(site, 'send_smtp_message') as send_message:
+            site.send_admin_email_notification(order_data)
 
-        message = send_message.call_args.args[1]
-        self.assertIn('Заказ №12', message)
-        self.assertIn('Тестовый товар', message)
-        self.assertIn('Доставка: за счёт покупателя', message)
-        for private_value in (
+        message = send_message.call_args.args[0]
+        self.assertEqual(message['To'], 'admin@example.test')
+        self.assertIn('№12', str(message['Subject']))
+        body = message.get_content()
+        self.assertIn('Тестовый товар', body)
+        self.assertIn('Доставка: за счёт покупателя', body)
+        for contact_value in (
             'Персональные Имя',
             '+79990000000',
             'private@example.test',
             'Персональный адрес',
         ):
-            self.assertNotIn(private_value, message)
+            self.assertIn(contact_value, body)
 
     def test_rejects_reusing_idempotency_key_with_different_order(self):
         self.create_online_order()
@@ -474,9 +477,8 @@ class PaymentFlowTests(unittest.TestCase):
             order = db.session.get(Order, order_id)
             self.assertEqual(order.status, 'paid')
             self.assertEqual(order.email_notification_status, 'sent')
-            self.assertEqual(order.telegram_notification_status, 'sent')
         self.email_sender_mock.assert_called_once()
-        self.telegram_sender_mock.assert_called_once()
+        self.admin_sender_mock.assert_called_once()
 
     def test_paid_game_order_moves_reserved_places_to_booked_places(self):
         with site.app.app_context():
@@ -574,7 +576,7 @@ class PaymentFlowTests(unittest.TestCase):
         with site.app.app_context():
             self.assertEqual(db.session.get(Order, order_id).status, 'pending')
         self.email_sender_mock.assert_not_called()
-        self.telegram_sender_mock.assert_not_called()
+        self.admin_sender_mock.assert_not_called()
 
     def test_canceled_payment_does_not_send_paid_notifications(self):
         created = self.create_online_order()
@@ -594,7 +596,7 @@ class PaymentFlowTests(unittest.TestCase):
         with site.app.app_context():
             self.assertEqual(db.session.get(Order, order_id).status, 'canceled')
         self.email_sender_mock.assert_not_called()
-        self.telegram_sender_mock.assert_not_called()
+        self.admin_sender_mock.assert_not_called()
 
     def test_rejects_game_order_exceeding_event_capacity(self):
         with site.app.app_context():

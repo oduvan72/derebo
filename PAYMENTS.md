@@ -19,26 +19,24 @@ on the server; do not commit their values:
   the site uses its `/payment-success` page.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_APP_PASSWORD` — SMTP settings.
   Port defaults to `587` with STARTTLS; set `SMTP_USE_SSL=1` for implicit TLS.
-  `SMTP_FROM` is optional and defaults to `SMTP_USERNAME`.
-- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_IDS` — the existing Telegram bot and
-  comma-separated numeric admin IDs used by the admin panel and order alerts.
+  `SMTP_FROM` is optional and defaults to `SMTP_USERNAME`. While these are not
+  set, the site works normally but skips order emails and logs that fact.
+- `ADMIN_USERNAME` and `ADMIN_PASSWORD` — credentials for the web admin panel
+  at `/admin`. Without `ADMIN_PASSWORD` the admin panel stays disabled.
+- `ADMIN_EMAIL` — address that receives an email notification about every new
+  or paid order.
 
-The Telegram admin bot runs separately with long polling (`python bot.py` or
-`docker compose up --build -d telegram-bot`). It does not need a public
-Telegram webhook or ngrok. On startup it removes any previous Telegram webhook
-without discarding pending updates. Keep `instance/` and `static/` mounted to
-the same host directories used by the Flask website so both processes share
-the SQLite database and admin-uploaded images. Create a local `.env` from
-`.env.example` and set a newly issued bot token; do not put credentials in
-source files or commit `.env`. Bot updates run in aiogram's polling loop; the
-existing Flask-SQLAlchemy admin operations are explicitly offloaded to worker
-threads with `asyncio.to_thread`, so synchronous ORM access does not block that
-loop or introduce a second set of mappings for the shared SQLite schema.
+The admin panel is served by the Flask app itself at `/admin` (dashboard with
+orders and revenue, plus management of games, products, events, reviews, and
+orders). All admin forms are protected by a session CSRF token. There is no
+separate bot process anymore. Keep `instance/` and `static/` mounted to host
+directories so the SQLite database and admin-uploaded images survive container
+rebuilds. Create a local `.env` from `.env.example`; do not put credentials in
+source files or commit `.env`.
 
 Register `https://<site-host>/api/payments/webhook` in YooKassa for
 `payment.succeeded` and `payment.canceled` events. Payment links expire after
-30 minutes; canceled payments release their reserved event places. This
-YooKassa webhook is separate from the removed Telegram webhook.
+30 minutes; canceled payments release their reserved event places.
 
 ## SQLite backups
 
@@ -59,23 +57,21 @@ contain customer/order data, so restrict access and include them in the site's
 secure backup plan.
 
 Automated tests use a temporary SQLite database and mock payment and
-notification services; they do not send real payments, emails, or Telegram
-messages. Run them with:
+notification services; they do not send real payments or emails. Run them with:
 
 ```powershell
 .\.venv313\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
 Existing games need a price and capacity set before game orders can be accepted.
-In Telegram `/admin`, use **Настроить цены игр** and
-**Настроить вместимость игр**. Newly created games request both values during
-setup. A game's capacity applies separately to each event where it is
+Set them in the web admin panel at `/admin/games` when adding or editing a
+game. A game's capacity applies separately to each event where it is
 scheduled; reserved and paid seats are tracked for each game-event pair.
 Events themselves do not have a capacity setting. When migrating an older
 database, a prior event capacity is copied to its games if they do not already
 have a capacity. Events with missing or unparseable dates stay out of public
-lists and cannot be ordered until an administrator corrects their date in
-Telegram.
+lists and cannot be ordered until an administrator corrects their date in the
+admin panel.
 
 ## Create an order
 
@@ -116,11 +112,10 @@ ID; omit `event_id`. Include `fulfillment_method` as `"delivery"` or `"pickup"`.
 Delivery requests must include `delivery_address`; the buyer pays the carrier's
 delivery charge separately. Pickup orders do not create a YooKassa payment and remain pending until they are
 handled at collection. They return `order_id`, `confirmation_url`, and
-`payment_required: false`; order confirmation email and Telegram admin alerts
-are sent immediately. The admin alert has actions to mark a collected order as
-paid or cancel it. Telegram alerts contain the order number, item, quantity,
-amount, and event date only; customer name, phone, email, and delivery address
-are not sent to Telegram. Paid orders return `payment_id`,
+`payment_required: false`; the order confirmation email to the customer and the
+admin notification email are sent immediately. The administrator marks a
+collected order as paid or cancels it on its page in `/admin/orders`. Paid
+orders return `payment_id`,
 `payment_required: true`, and `confirmation_url`. A new order returns HTTP 201;
 an idempotent replay returns HTTP 200. Invalid data, a mismatched price, or
 unavailable places return HTTP 400.
@@ -142,6 +137,6 @@ parameters when configuring `PAYMENT_RETURN_URL`.
 The webhook retrieves the payment from YooKassa and verifies its status,
 metadata, currency, amount and association with the order before changing the
 database. Successful game payments convert reserved places into booked places.
-The customer confirmation email and Telegram admin notification are sent after
+The customer confirmation email and the admin notification email are sent after
 the transaction commits; unsuccessful notifications are retried when YooKassa
 re-delivers the webhook.

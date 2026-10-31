@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Вход в админ-панель — Древо Эльтои</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+    <main class="admin-main" style="max-width: 420px; margin-top: 10vh;">
+        <div class="admin-card">
+            <h1>Вход в админ-панель</h1>
+            {% if admin_disabled %}
+                <p>Админ-панель не настроена: задайте переменные окружения
+                <code>ADMIN_USERNAME</code> и <code>ADMIN_PASSWORD</code> и перезапустите сайт.</p>
+            {% else %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="flash flash--{{ category }}" role="status">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+                <form class="admin-form" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="username">Логин</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Войти</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

@@ -12,7 +12,7 @@ from email.message import EmailMessage
 from email.utils import parseaddr
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from flask import Flask, abort, jsonify, render_template, request, url_for
+from flask import Flask, abort, jsonify, render_template, request, session, url_for
 from requests.exceptions import RequestException
 from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -20,7 +20,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from yookassa import Configuration, Payment
 from yookassa.domain.exceptions import ApiError
 
-from bot import TELEGRAM_ADMIN_IDS, send_admin_message
+from admin import admin_bp
 from db import (
     Event,
     Game,
@@ -38,6 +38,7 @@ from db import (
     migrate_game_photos,
     migrate_order_booking_fields,
     migrate_product_details,
+    release_reserved_seats,
     utcnow,
 )
 
@@ -51,6 +52,35 @@ app.config['SECRET_KEY'] = secret_key
 app.config['SESSION_COOKIE_SECURE'] = not debug_enabled
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.register_blueprint(admin_bp, url_prefix='/admin')
+
+
+def generate_csrf_token():
+    token = session.get('_csrf_token')
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session['_csrf_token'] = token
+    return token
+
+
+@app.context_processor
+def inject_csrf_token():
+    return {'csrf_token': generate_csrf_token}
+
+
+@app.before_request
+def csrf_protect_admin_forms():
+    if request.method != 'POST' or request.blueprint != 'admin':
+        return None
+    token = session.get('_csrf_token')
+    sent_token = request.form.get('csrf_token', '')
+    if not token or not sent_token or not hmac.compare_digest(token, sent_token):
+        abort(400, 'Отсутствует или недействителен CSRF-токен. Обновите страницу.')
+    return None
+
+
 if debug_enabled:
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -63,7 +93,7 @@ if debug_enabled:
 PICKUP_LOCATION = os.environ.get(
     'PICKUP_LOCATION', 'Якутск, точный адрес после оформления заказа'
 )
-PERSONAL_DATA_CONSENT_VERSION = '2026-10-27'
+PERSONAL_DATA_CONSENT_VERSION = '2026-10-31'
 init_db(app)
 with app.app_context():
     db.create_all()
@@ -511,20 +541,6 @@ def resolve_existing_order(order, order_data):
     return existing_order_result(order, order_data)
 
 
-def release_reserved_seats(event_id, game_id, quantity):
-    result = db.session.execute(
-        update(event_games)
-        .where(
-            event_games.c.event_id == event_id,
-            event_games.c.game_number == game_id,
-            event_games.c.reserved_places >= quantity,
-        )
-        .values(reserved_places=event_games.c.reserved_places - quantity)
-        .execution_options(synchronize_session=False)
-    )
-    return result.rowcount == 1
-
-
 def mark_order_failed(order_id):
     with app.app_context():
         order = db.session.get(Order, order_id)
@@ -599,12 +615,7 @@ async def api_create_order():
                 send_customer_email,
                 order_data_for_notification,
             ),
-            send_order_notification(
-                result['order_id'],
-                'telegram',
-                send_telegram_notification,
-                order_data_for_notification,
-            ),
+            send_admin_notification_safe(order_data_for_notification),
         )
         errors = [error for error in notification_errors if error]
         if errors:
@@ -613,11 +624,6 @@ async def api_create_order():
                 result['order_id'],
                 errors,
             )
-            return jsonify({
-                'error': 'Заказ создан, но уведомления не отправлены. Повторите запрос с тем же ключом.',
-                'order_id': result['order_id'],
-                'confirmation_url': result['confirmation_url'],
-            }), 503
     replayed = result.pop('_replayed', False)
     return jsonify(result), 200 if replayed else 201
 
@@ -735,10 +741,6 @@ def get_notification_data(order_id):
 
 NOTIFICATION_COLUMNS = {
     'email': (Order.email_notification_status, Order.email_notification_claimed_at),
-    'telegram': (
-        Order.telegram_notification_status,
-        Order.telegram_notification_claimed_at,
-    ),
 }
 
 
@@ -783,7 +785,15 @@ def finish_notification(order_id, channel, sent):
         db.session.commit()
 
 
-def send_customer_email(order_data):
+def smtp_is_configured():
+    return all((
+        os.environ.get('SMTP_HOST', ''),
+        os.environ.get('SMTP_USERNAME', ''),
+        os.environ.get('SMTP_APP_PASSWORD', ''),
+    ))
+
+
+def send_smtp_message(message):
     smtp_host = os.environ.get('SMTP_HOST', '')
     smtp_username = os.environ.get('SMTP_USERNAME', '')
     smtp_password = os.environ.get('SMTP_APP_PASSWORD', '')
@@ -795,7 +805,22 @@ def send_customer_email(order_data):
         raise RuntimeError(
             'SMTP_HOST, SMTP_USERNAME и SMTP_APP_PASSWORD должны быть настроены.'
         )
+    context = ssl.create_default_context()
+    use_ssl = os.environ.get('SMTP_USE_SSL', '').lower() in {'1', 'true', 'yes'}
+    if use_ssl:
+        smtp_connection = smtplib.SMTP_SSL(
+            smtp_host, smtp_port, timeout=20, context=context
+        )
+    else:
+        smtp_connection = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
+    with smtp_connection as smtp:
+        if not use_ssl:
+            smtp.starttls(context=context)
+        smtp.login(smtp_username, smtp_password)
+        smtp.send_message(message)
 
+
+def send_customer_email(order_data):
     message = EmailMessage()
     message['Subject'] = (
         f'Заказ №{order_data["order_id"]} — {order_data["product_name"]}'
@@ -849,26 +874,18 @@ def send_customer_email(order_data):
         '</body></html>',
         subtype='html',
     )
-
-    context = ssl.create_default_context()
-    use_ssl = os.environ.get('SMTP_USE_SSL', '').lower() in {'1', 'true', 'yes'}
-    if use_ssl:
-        smtp_connection = smtplib.SMTP_SSL(
-            smtp_host, smtp_port, timeout=20, context=context
-        )
-    else:
-        smtp_connection = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
-    with smtp_connection as smtp:
-        if not use_ssl:
-            smtp.starttls(context=context)
-        smtp.login(smtp_username, smtp_password)
-        smtp.send_message(message)
+    send_smtp_message(message)
 
 
-def send_telegram_notification(order_data):
-    if not TELEGRAM_ADMIN_IDS:
-        raise RuntimeError('TELEGRAM_ADMIN_IDS не настроен.')
-    event_detail = f'\nДата события: {order_data["event_date"]}' if order_data['event_date'] else ''
+def send_admin_email_notification(order_data):
+    admin_email = os.environ.get('ADMIN_EMAIL', '')
+    if not admin_email:
+        raise RuntimeError('ADMIN_EMAIL не настроен.')
+    event_detail = (
+        f'\nДата события: {order_data["event_date"]}'
+        if order_data['event_date']
+        else ''
+    )
     order_title = (
         'Оплачен новый заказ'
         if order_data['status'] == 'paid'
@@ -880,32 +897,71 @@ def send_telegram_notification(order_data):
             if order_data['delivery_fee'] > 0
             else '\nДоставка: за счёт покупателя, оплата перевозчику отдельно.'
         )
+        delivery_detail += f'\nАдрес доставки: {order_data["delivery_address"]}.'
+    elif order_data['fulfillment_method'] == 'pickup':
+        delivery_detail = f'\nСамовывоз: {PICKUP_LOCATION}.'
     else:
         delivery_detail = ''
-    message = (
+    message = EmailMessage()
+    message['Subject'] = f'{order_title} — №{order_data["order_id"]}'
+    message['From'] = os.environ.get(
+        'SMTP_FROM', os.environ.get('SMTP_USERNAME', '')
+    )
+    message['To'] = admin_email
+    message.set_content(
         f'{order_title}\n'
         f'Заказ №{order_data["order_id"]}\n'
         f'Игра/товар: {order_data["product_name"]}\n'
         f'Количество: {order_data["quantity"]}\n'
-        f'Сумма: {order_data["amount"]:.2f} ₽{event_detail}{delivery_detail}'
+        f'Сумма: {order_data["amount"]:.2f} ₽{event_detail}{delivery_detail}\n'
+        f'Покупатель: {order_data["user_name"]}\n'
+        f'Телефон: {order_data["user_phone"]}\n'
+        f'Email: {order_data["user_email"]}\n'
+        f'\nПодробности: /admin/orders/{order_data["order_id"]}'
     )
-    keyboard = None
-    if order_data['fulfillment_method'] == 'pickup' and order_data['status'] == 'pending':
-        keyboard = [[
-            {
-                'text': 'Отметить оплаченным',
-                'callback_data': f'pickup_paid:{order_data["order_id"]}',
-            },
-            {
-                'text': 'Отменить заказ',
-                'callback_data': f'pickup_cancel:{order_data["order_id"]}',
-            },
-        ]]
-    for admin_id in TELEGRAM_ADMIN_IDS:
-        send_admin_message(admin_id, message, keyboard)
+    send_smtp_message(message)
+
+
+async def send_admin_notification_safe(order_data):
+    if not smtp_is_configured() or not os.environ.get('ADMIN_EMAIL', ''):
+        logging.info(
+            'SMTP или ADMIN_EMAIL не настроены; уведомление администратора '
+            'о заказе %s пропущено.',
+            order_data['order_id'],
+        )
+        return None
+    try:
+        await asyncio.to_thread(send_admin_email_notification, order_data)
+    except (OSError, RuntimeError, smtplib.SMTPException) as error:
+        logging.error(
+            'Failed sending admin email notification for order %s: %s',
+            order_data['order_id'],
+            error,
+        )
+        return f'admin_email: {error}'
+    return None
+
+
+def mark_notification_skipped(order_id, channel):
+    status_column, _ = NOTIFICATION_COLUMNS[channel]
+    with app.app_context():
+        db.session.execute(
+            update(Order)
+            .where(Order.id == order_id, status_column == 'pending')
+            .values(**{status_column.key: 'skipped'})
+            .execution_options(synchronize_session=False)
+        )
+        db.session.commit()
 
 
 async def send_order_notification(order_id, channel, sender, order_data):
+    if channel == 'email' and not smtp_is_configured():
+        logging.info(
+            'SMTP не настроен; письмо покупателю по заказу %s пропущено.',
+            order_id,
+        )
+        await asyncio.to_thread(mark_notification_skipped, order_id, channel)
+        return None
     claimed = await asyncio.to_thread(claim_notification, order_id, channel)
     if not claimed:
         return None
@@ -957,9 +1013,7 @@ async def handle_yookassa_webhook():
         send_order_notification(
             order_id, 'email', send_customer_email, order_data
         ),
-        send_order_notification(
-            order_id, 'telegram', send_telegram_notification, order_data
-        ),
+        send_admin_notification_safe(order_data),
     )
     errors = [error for error in notification_errors if error]
     if errors:

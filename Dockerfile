@@ -47,7 +47,7 @@ RUN apt-get update \
     && python -m pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
     && rm -rf /var/lib/apt/lists/* /wheels
 
-COPY app.py bot.py db.py ./
+COPY app.py admin.py db.py ./
 COPY templates ./templates
 COPY static ./static
 COPY --from=assets /app/static/tailwind.css ./static/tailwind.css

@@ -1,0 +1,74 @@
+{% extends "admin/base.html" %}
+{% block title %}Дашборд{% endblock %}
+{% block content %}
+<h1>Дашборд</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ '%.2f'|format(revenue_total) }} ₽</div>
+        <div class="stat-label">Выручка по оплаченным заказам</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ status_counts.get('pending', 0) }}</div>
+        <div class="stat-label">Заказов ожидает оплаты</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ status_counts.get('paid', 0) }}</div>
+        <div class="stat-label">Оплаченных заказов</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ status_counts.get('canceled', 0) + status_counts.get('failed', 0) }}</div>
+        <div class="stat-label">Отменено / с ошибкой</div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h2>Последние заказы</h2>
+    {% if recent_orders %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>№</th><th>Заказ</th><th>Сумма</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for order in recent_orders %}
+            <tr>
+                <td>№{{ order.id }}</td>
+                <td>{{ order.product_name }} × {{ order.quantity }}</td>
+                <td>{{ '%.2f'|format(order.amount) }} ₽</td>
+                <td><span class="badge badge--{{ order.status }}">{{ order_status_labels.get(order.status, order.status) }}</span></td>
+                <td><a class="btn btn--small btn--secondary" href="{{ url_for('admin.order_detail', order_id=order.id) }}">Открыть</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="margin-top: 12px;"><a href="{{ url_for('admin.orders') }}">Все заказы →</a></p>
+    {% else %}
+    <p>Заказов пока нет.</p>
+    {% endif %}
+</div>
+
+<div class="admin-card">
+    <h2>Ближайшие события</h2>
+    {% if event_rows %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>Дата</th><th>Игра</th><th>Свободно мест</th></tr>
+        </thead>
+        <tbody>
+            {% for row in event_rows %}
+                {% for title, capacity, reserved, booked in row.links %}
+                <tr>
+                    <td>{{ row.event.date }}</td>
+                    <td>{{ title }}</td>
+                    <td>{{ [(capacity or 0) - reserved - booked, 0]|max }} из {{ capacity or 0 }}</td>
+                </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    <p style="margin-top: 12px;"><a href="{{ url_for('admin.events') }}">Все события →</a></p>
+    {% else %}
+    <p>Ближайших событий нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

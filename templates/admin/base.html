@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{% block title %}Админ-панель{% endblock %} — Древо Эльтои</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+    <header class="admin-header">
+        <a class="brand" href="{{ url_for('admin.dashboard') }}">Админ-панель</a>
+        <nav class="admin-nav" aria-label="Навигация админ-панели">
+            <a href="{{ url_for('admin.dashboard') }}" {% if request.endpoint == 'admin.dashboard' %}aria-current="page"{% endif %}>Дашборд</a>
+            <a href="{{ url_for('admin.orders') }}" {% if request.endpoint in ('admin.orders', 'admin.order_detail') %}aria-current="page"{% endif %}>Заказы</a>
+            <a href="{{ url_for('admin.games') }}" {% if request.endpoint in ('admin.games', 'admin.game_add', 'admin.game_edit') %}aria-current="page"{% endif %}>Игры</a>
+            <a href="{{ url_for('admin.products') }}" {% if request.endpoint in ('admin.products', 'admin.product_add', 'admin.product_edit') %}aria-current="page"{% endif %}>Товары</a>
+            <a href="{{ url_for('admin.events') }}" {% if request.endpoint in ('admin.events', 'admin.event_add', 'admin.event_edit') %}aria-current="page"{% endif %}>События</a>
+            <a href="{{ url_for('admin.reviews') }}" {% if request.endpoint in ('admin.reviews', 'admin.review_add', 'admin.review_edit') %}aria-current="page"{% endif %}>Отзывы</a>
+            <a href="{{ url_for('home') }}">На сайт</a>
+        </nav>
+        <form method="post" action="{{ url_for('admin.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn--small btn--secondary" type="submit">Выйти</button>
+        </form>
+    </header>
+    <main class="admin-main">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash flash--{{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -12,8 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FLASK_SECRET_KEY: github-actions-test-key-not-for-production
-      TELEGRAM_BOT_TOKEN: ''
-      TELEGRAM_ADMIN_IDS: ''
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

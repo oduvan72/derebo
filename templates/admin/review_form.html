@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать отзыв' if review else 'Новый отзыв' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактировать отзыв #' ~ review.id if review else 'Новый отзыв' }}</h1>
+
+<div class="admin-card">
+    <form class="admin-form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="author">Автор *</label>
+        <input type="text" id="author" name="author" required maxlength="100"
+               value="{{ form.get('author', review.author if review else '') }}">
+
+        <label for="body">Текст отзыва *</label>
+        <textarea id="body" name="body" required maxlength="4000">{{ form.get('body', review.body if review else '') }}</textarea>
+
+        <div class="checkbox-row" style="margin-top: 14px;">
+            {% set published = form.get('is_published') if request.method == 'POST' else ('on' if review and review.is_published else '') %}
+            <input type="checkbox" id="is_published" name="is_published" {% if published %}checked{% endif %}>
+            <label for="is_published" style="margin: 0; font-weight: 400;">Опубликован на сайте</label>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ 'Сохранить' if review else 'Добавить отзыв' }}</button>
+            <a class="btn btn--secondary" href="{{ url_for('admin.reviews') }}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

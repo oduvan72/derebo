@@ -1,0 +1,36 @@
+{% extends "admin/base.html" %}
+{% from "admin/_pagination.html" import render_pagination %}
+{% block title %}События{% endblock %}
+{% block content %}
+<h1>События</h1>
+<p><a class="btn" href="{{ url_for('admin.event_add') }}">+ Добавить событие</a></p>
+
+<div class="admin-card">
+    {% if pagination.items %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>№</th><th>Дата</th><th>Игры</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for event in pagination.items %}
+            <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.date }}</td>
+                <td>{{ event.games|map(attribute='title')|join(', ') }}</td>
+                <td>
+                    <a class="btn btn--small btn--secondary" href="{{ url_for('admin.event_edit', event_id=event.id) }}">Изменить</a>
+                    <form class="inline-form" method="post" action="{{ url_for('admin.event_delete', event_id=event.id) }}" onsubmit="return confirm('Удалить событие «{{ event.date }}»?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--small btn--danger" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'admin.events') }}
+    {% else %}
+    <p>Событий пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать игру' if game else 'Новая игра' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактировать игру «' ~ game.title ~ '»' if game else 'Новая игра' }}</h1>
+
+<div class="admin-card">
+    <form class="admin-form" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="title">Название *</label>
+        <input type="text" id="title" name="title" required maxlength="200"
+               value="{{ form.get('title', game.title if game else '') }}">
+
+        <label for="target">Целевая аудитория *</label>
+        <input type="text" id="target" name="target" required maxlength="200"
+               value="{{ form.get('target', game.target if game else '') }}">
+
+        <label for="price">Цена, ₽</label>
+        <input type="number" id="price" name="price" min="1" step="1"
+               value="{{ form.get('price', game.price if game and game.price is not none else '') }}">
+        <p class="hint">Оставьте пустым, если цена ещё не настроена.</p>
+
+        <label for="capacity">Вместимость (мест на событие)</label>
+        <input type="number" id="capacity" name="capacity" min="1" step="1"
+               value="{{ form.get('capacity', game.capacity if game and game.capacity is not none else '') }}">
+
+        <label for="desc">Описание *</label>
+        <textarea id="desc" name="desc" required>{{ form.get('desc', game.desc if game else '') }}</textarea>
+
+        {% if game and game.photos %}
+        <label>Текущие фото</label>
+        <div class="photo-grid">
+            {% for photo in game.photos %}
+            <figure>
+                <img src="{{ url_for('static', filename=photo) }}" alt="">
+                <label class="checkbox-row">
+                    <input type="checkbox" name="remove_photos" value="{{ photo }}"> Удалить
+                </label>
+            </figure>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <label for="photos">Загрузить фото</label>
+        <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+        <p class="hint">JPG, PNG или WebP, до 10 МБ каждый. Новые фото добавляются к существующим.</p>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ 'Сохранить' if game else 'Добавить игру' }}</button>
+            <a class="btn btn--secondary" href="{{ url_for('admin.games') }}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% from "admin/_pagination.html" import render_pagination %}
+{% block title %}Товары{% endblock %}
+{% block content %}
+<h1>Товары</h1>
+<p><a class="btn" href="{{ url_for('admin.product_add') }}">+ Добавить товар</a></p>
+
+<div class="filter-row">
+    <a href="{{ url_for('admin.products') }}" {% if not selected_category %}class="active"{% endif %}>Все категории</a>
+    {% for category in product_categories %}
+        <a href="{{ url_for('admin.products', category=category) }}" {% if selected_category == category %}class="active"{% endif %}>{{ category }}</a>
+    {% endfor %}
+</div>
+
+<div class="admin-card">
+    {% if pagination.items %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>№</th><th>Название</th><th>Категория</th><th>Подкатегория</th><th>Цена</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for product in pagination.items %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.subcategory or '—' }}</td>
+                <td>{{ product.price }} ₽</td>
+                <td>
+                    <a class="btn btn--small btn--secondary" href="{{ url_for('admin.product_edit', product_id=product.id) }}">Изменить</a>
+                    <form class="inline-form" method="post" action="{{ url_for('admin.product_delete', product_id=product.id) }}" onsubmit="return confirm('Удалить товар «{{ product.name }}»?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--small btn--danger" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'admin.products') }}
+    {% else %}
+    <p>Товаров не найдено.</p>
+    {% endif %}
+</div>
+{% endblock %}

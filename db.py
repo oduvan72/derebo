@@ -6,7 +6,7 @@ from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
-from sqlalchemy import event, inspect, text
+from sqlalchemy import event, inspect, text, update
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -133,6 +133,20 @@ def get_db_connection(database_path=None):
     return connection
 
 
+def release_reserved_seats(event_id, game_id, quantity):
+    result = db.session.execute(
+        update(event_games)
+        .where(
+            event_games.c.event_id == event_id,
+            event_games.c.game_number == game_id,
+            event_games.c.reserved_places >= quantity,
+        )
+        .values(reserved_places=event_games.c.reserved_places - quantity)
+        .execution_options(synchronize_session=False)
+    )
+    return result.rowcount == 1
+
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(200), nullable=True)
@@ -161,9 +175,8 @@ class Order(db.Model):
     payment_expires_at = db.Column(db.String(40), nullable=True)
     payment_return_url = db.Column(db.Text, nullable=True)
     email_notification_status = db.Column(db.String(20), nullable=False, default='pending')
-    telegram_notification_status = db.Column(db.String(20), nullable=False, default='pending')
     email_notification_claimed_at = db.Column(db.DateTime, nullable=True)
-    telegram_notification_claimed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=True, default=utcnow, index=True)
 
 event_games = db.Table(
     'event_games',
@@ -309,9 +322,8 @@ def migrate_order_booking_fields():
             'payment_expires_at': 'VARCHAR(40)',
             'payment_return_url': 'TEXT',
             'email_notification_status': "VARCHAR(20) NOT NULL DEFAULT 'pending'",
-            'telegram_notification_status': "VARCHAR(20) NOT NULL DEFAULT 'pending'",
             'email_notification_claimed_at': 'DATETIME',
-            'telegram_notification_claimed_at': 'DATETIME',
+            'created_at': 'DATETIME',
         },
     }
 
@@ -407,12 +419,6 @@ def migrate_event_dates():
                     'event_id': row['id'],
                 },
             )
-
-
-class TelegramAdminState(db.Model):
-    user_id = db.Column(db.Integer, primary_key=True)
-    state = db.Column(db.String(40), nullable=False)
-    payload = db.Column(db.Text, nullable=False, default='{}')
 
 
 def get_games():

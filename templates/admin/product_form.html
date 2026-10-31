@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ 'Редактировать товар' if product else 'Новый товар' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактировать товар «' ~ product.name ~ '»' if product else 'Новый товар' }}</h1>
+
+<div class="admin-card">
+    <form class="admin-form" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="category">Категория *</label>
+        <select id="category" name="category" required>
+            {% set current_category = form.get('category', product.category if product else '') %}
+            {% for category in product_categories %}
+            <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="subcategory">Подкатегория</label>
+        <select id="subcategory" name="subcategory">
+            <option value="">—</option>
+            {% set current_subcategory = form.get('subcategory', product.subcategory if product else '') %}
+            {% for subcategory in product_subcategories %}
+            <option value="{{ subcategory }}" {% if current_subcategory == subcategory %}selected{% endif %}>{{ subcategory }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="name">Название *</label>
+        <input type="text" id="name" name="name" required maxlength="200"
+               value="{{ form.get('name', product.name if product else '') }}">
+
+        <label for="podzagolovok">Подзаголовок</label>
+        <input type="text" id="podzagolovok" name="podzagolovok" maxlength="255"
+               value="{{ form.get('podzagolovok', product.podzagolovok if product and product.podzagolovok else '') }}">
+
+        <label for="price">Цена, ₽ *</label>
+        <input type="number" id="price" name="price" min="0" step="1" required
+               value="{{ form.get('price', product.price if product else '') }}">
+
+        <label for="description">Краткое описание *</label>
+        <textarea id="description" name="description" required>{{ form.get('description', product.description if product else '') }}</textarea>
+
+        <label for="full_description">Полное описание</label>
+        <textarea id="full_description" name="full_description">{{ form.get('full_description', product.full_description if product and product.full_description else '') }}</textarea>
+
+        <label for="materials">Материалы</label>
+        <input type="text" id="materials" name="materials" maxlength="255"
+               value="{{ form.get('materials', product.materials if product and product.materials else '') }}">
+
+        <label for="dimensions">Размеры</label>
+        <input type="text" id="dimensions" name="dimensions" maxlength="120"
+               value="{{ form.get('dimensions', product.dimensions if product and product.dimensions else '') }}">
+
+        <label for="main_photo">Основное фото (загрузка)</label>
+        <input type="file" id="main_photo" name="main_photo" accept="image/jpeg,image/png,image/webp">
+        <p class="hint">JPG, PNG или WebP, до 10 МБ.</p>
+
+        <label for="photo">Или имя файла из /static{% if not product %} *{% endif %}</label>
+        <input type="text" id="photo" name="photo" maxlength="255"
+               value="{{ form.get('photo', product.photo if product else '') }}">
+        <p class="hint">Например, mandala11.jpg. Загруженный файл имеет приоритет над именем.</p>
+
+        {% if product and product.photos %}
+        <label>Дополнительные фото</label>
+        <div class="photo-grid">
+            {% for photo in product.photos %}
+            <figure>
+                <img src="{{ url_for('static', filename=photo) }}" alt="">
+                <label class="checkbox-row">
+                    <input type="checkbox" name="remove_photos" value="{{ photo }}"> Удалить
+                </label>
+            </figure>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <label for="photos">Добавить дополнительные фото</label>
+        <input type="file" id="photos" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+
+        <div class="form-actions">
+            <button class="btn" type="submit">{{ 'Сохранить' if product else 'Добавить товар' }}</button>
+            <a class="btn btn--secondary" href="{{ url_for('admin.products') }}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

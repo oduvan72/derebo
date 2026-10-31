@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+{% from "admin/_pagination.html" import render_pagination %}
+{% block title %}Заказы{% endblock %}
+{% block content %}
+<h1>Заказы</h1>
+
+<div class="filter-row">
+    <a href="{{ url_for('admin.orders') }}" {% if not selected_status %}class="active"{% endif %}>Все</a>
+    {% for status, label in order_status_labels.items() %}
+        <a href="{{ url_for('admin.orders', status=status) }}" {% if selected_status == status %}class="active"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</div>
+
+<div class="admin-card">
+    {% if pagination.items %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>№</th><th>Дата</th><th>Покупатель</th><th>Заказ</th>
+                <th>Сумма</th><th>Способ</th><th>Статус</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in pagination.items %}
+            <tr>
+                <td>№{{ order.id }}</td>
+                <td>{{ order.created_at.strftime('%d.%m.%Y %H:%M') if order.created_at else '—' }}</td>
+                <td>{{ order.user_name or '—' }}<br><small>{{ order.user_email }}</small></td>
+                <td>{{ order.product_name }} × {{ order.quantity }}</td>
+                <td>{{ '%.2f'|format(order.amount) }} ₽</td>
+                <td>{{ {'pickup': 'Самовывоз', 'delivery': 'Доставка', 'event': 'Игра'}.get(order.fulfillment_method, order.fulfillment_method) }}</td>
+                <td><span class="badge badge--{{ order.status }}">{{ order_status_labels.get(order.status, order.status) }}</span></td>
+                <td><a class="btn btn--small btn--secondary" href="{{ url_for('admin.order_detail', order_id=order.id) }}">Открыть</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'admin.orders') }}
+    {% else %}
+    <p>Заказы не найдены.</p>
+    {% endif %}
+</div>
+{% endblock %}

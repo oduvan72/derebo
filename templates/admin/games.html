@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% from "admin/_pagination.html" import render_pagination %}
+{% block title %}Игры{% endblock %}
+{% block content %}
+<h1>Игры</h1>
+<p><a class="btn" href="{{ url_for('admin.game_add') }}">+ Добавить игру</a></p>
+
+<div class="admin-card">
+    {% if pagination.items %}
+    <table class="admin-table">
+        <thead>
+            <tr><th>ID</th><th>Название</th><th>Цена</th><th>Вместимость</th><th>Фото</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for game in pagination.items %}
+            <tr>
+                <td>{{ game.id }}</td>
+                <td>{{ game.title }}</td>
+                <td>{{ (game.price ~ ' ₽') if game.price is not none else '—' }}</td>
+                <td>{{ game.capacity if game.capacity is not none else '—' }}</td>
+                <td>{{ (game.photos|length) if game.photos else 0 }}</td>
+                <td>
+                    <a class="btn btn--small btn--secondary" href="{{ url_for('admin.game_edit', game_id=game.id) }}">Изменить</a>
+                    <form class="inline-form" method="post" action="{{ url_for('admin.game_delete', game_id=game.id) }}" onsubmit="return confirm('Удалить игру «{{ game.title }}»?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn--small btn--danger" type="submit">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {{ render_pagination(pagination, 'admin.games') }}
+    {% else %}
+    <p>Игр пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

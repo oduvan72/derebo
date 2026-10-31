@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+{% block title %}Заказ №{{ order.id }}{% endblock %}
+{% block content %}
+<h1>Заказ №{{ order.id }}</h1>
+
+<div class="admin-card">
+    <dl class="detail-list">
+        <dt>Статус</dt>
+        <dd><span class="badge badge--{{ order.status }}">{{ order_status_labels.get(order.status, order.status) }}</span></dd>
+        <dt>Товар / игра</dt>
+        <dd>{{ order.product_name }} × {{ order.quantity }}</dd>
+        <dt>Сумма</dt>
+        <dd>{{ '%.2f'|format(order.amount) }} ₽</dd>
+        <dt>Способ получения</dt>
+        <dd>{{ {'pickup': 'Самовывоз', 'delivery': 'Доставка', 'event': 'Запись на игру'}.get(order.fulfillment_method, order.fulfillment_method) }}</dd>
+        {% if event %}
+        <dt>Событие</dt>
+        <dd>{{ event.date }}</dd>
+        {% endif %}
+        {% if order.delivery_address %}
+        <dt>Адрес доставки</dt>
+        <dd>{{ order.delivery_address }}</dd>
+        {% endif %}
+        <dt>Покупатель</dt>
+        <dd>{{ order.user_name or '—' }}</dd>
+        <dt>Телефон</dt>
+        <dd>{{ order.user_phone or '—' }}</dd>
+        <dt>Email</dt>
+        <dd><a href="mailto:{{ order.user_email }}">{{ order.user_email }}</a></dd>
+        <dt>Создан</dt>
+        <dd>{{ order.created_at.strftime('%d.%m.%Y %H:%M') if order.created_at else '—' }}</dd>
+        <dt>Письмо покупателю</dt>
+        <dd>{{ {'pending': 'в очереди', 'sending': 'отправляется', 'sent': 'отправлено', 'skipped': 'пропущено (SMTP не настроен)'}.get(order.email_notification_status, order.email_notification_status) }}</dd>
+        {% if order.yookassa_id %}
+        <dt>Платёж YooKassa</dt>
+        <dd><code>{{ order.yookassa_id }}</code></dd>
+        {% endif %}
+    </dl>
+
+    {% if order.status == 'pending' %}
+    <div class="form-actions">
+        {% if order.fulfillment_method == 'pickup' %}
+        <form class="inline-form" method="post" action="{{ url_for('admin.order_change_status', order_id=order.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="mark_paid">
+            <button class="btn" type="submit">Отметить оплаченным</button>
+        </form>
+        {% endif %}
+        <form class="inline-form" method="post" action="{{ url_for('admin.order_change_status', order_id=order.id) }}" onsubmit="return confirm('Отменить заказ №{{ order.id }}?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="cancel">
+            <button class="btn btn--danger" type="submit">Отменить заказ</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<p><a href="{{ url_for('admin.orders') }}">← К списку заказов</a></p>
+{% endblock %}
