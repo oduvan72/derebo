@@ -6,16 +6,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        cargo \
-        libffi-dev \
-        libssl-dev \
-        pkg-config \
-        rustc \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY requirements.txt .
 RUN python -m pip wheel --wheel-dir=/wheels -r requirements.txt
 
@@ -42,10 +32,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 COPY --from=builder /wheels /wheels
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libstdc++6 libgcc-s1 \
-    && python -m pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
-    && rm -rf /var/lib/apt/lists/* /wheels
+RUN python -m pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt \
+    && rm -rf /wheels
 
 COPY app.py admin.py db.py ./
 COPY templates ./templates
