@@ -2,50 +2,91 @@
 
 {% block content %}
 <section class="section section--roots" aria-labelledby="payment-result-title">
-    <div class="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p class="eyebrow eyebrow--surface">Заказ #{{ order.id }}</p>
+    <div class="mx-auto max-w-2xl px-6 py-24 md:py-32">
+        <p class="eyebrow eyebrow--surface text-center">Заказ #{{ order.id }}</p>
         {% if payment_state == 'paid' %}
-        <h1 class="section-title mt-4" id="payment-result-title">Оплата принята</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
-            Подтверждение и дальнейшая информация будут отправлены на {{ masked_email }}.
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Оплата принята</h1>
         {% elif payment_state == 'pickup_paid' %}
-        <h1 class="section-title mt-4" id="payment-result-title">Самовывоз оплачен</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
-            Заказ оплачен при получении. Спасибо!
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Самовывоз оплачен</h1>
         {% elif payment_state == 'pickup_canceled' %}
-        <h1 class="section-title mt-4" id="payment-result-title">Заказ отменён</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
-            Заказ самовывоза отменён. Если это произошло по ошибке, свяжитесь с нами.
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Заказ отменён</h1>
         {% elif payment_state == 'pickup' %}
-        <h1 class="section-title mt-4" id="payment-result-title">Заказ принят</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
-            Самовывоз в Якутске бесплатный. Оплатите заказ при получении.
-            {{ pickup_location }}. Мы свяжемся с вами для согласования места и времени.
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Заказ принят</h1>
         {% elif payment_state == 'canceled' %}
-        <h1 class="section-title mt-4" id="payment-result-title">Оплата не завершена</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80">
-            Платёж отменён или не прошёл. Заказ не считается оплаченным. Если списание отображается в банке, пожалуйста, свяжитесь с нами.
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Оплата не завершена</h1>
         {% else %}
-        <h1 class="section-title mt-4" id="payment-result-title">Проверяем оплату</h1>
-        <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80" id="payment-status-message" role="status" aria-live="polite">
-            ЮKassa ещё подтверждает платёж. Эта страница обновится автоматически; не оплачивайте заказ повторно.
-        </p>
+        <h1 class="section-title mt-4 text-center" id="payment-result-title">Проверяем оплату</h1>
         {% endif %}
-        <a class="line-button mt-8" href="{{ url_for('home') }}">На главную <span aria-hidden="true">↗</span></a>
+
+        <div class="mx-auto mt-8 max-w-xl rounded-sm border border-paper/20 p-6 text-left">
+            <p class="text-base leading-7 text-paper/80">
+                <span class="text-paper/60">Заказ:</span> «{{ order.product_name }}»<br>
+                <span class="text-paper/60">Количество:</span> {{ order.quantity }}<br>
+                <span class="text-paper/60">Сумма:</span> {{ '%.2f'|format(order.amount) }} ₽
+                {% if order.fulfillment_method == 'pickup' %}<br>
+                <span class="text-paper/60">Получение:</span> самовывоз ({{ pickup_location }})
+                {% elif order.fulfillment_method == 'delivery' %}<br>
+                <span class="text-paper/60">Получение:</span> доставка по России
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="mx-auto mt-8 max-w-xl text-left" id="payment-next-steps">
+            {% if payment_state == 'paid' %}
+            <h2 class="section-title">Что дальше</h2>
+            <ol class="mt-4 list-decimal space-y-3 pl-5 text-base leading-7 text-paper/80">
+                <li>Подтверждение оплаты отправлено на {{ masked_email }} — проверьте папку «Входящие» (и «Спам», если письма нет).</li>
+                <li>В ближайшее время, обычно в течение дня, мы свяжемся с вами по телефону или email, чтобы согласовать способ доставки и её стоимость — пересылка оплачивается отдельно перевозчику по его тарифам.</li>
+                <li>После отправки товара мы пришлём трек-номер для отслеживания на этот же email.</li>
+            </ol>
+            {% elif payment_state == 'pickup_paid' %}
+            <h2 class="section-title">Что дальше</h2>
+            <ol class="mt-4 list-decimal space-y-3 pl-5 text-base leading-7 text-paper/80">
+                <li>Подтверждение оплаты отправлено на {{ masked_email }}.</li>
+                <li>Мы свяжемся с вами, чтобы согласовать удобное место и время встречи в Якутске.</li>
+                <li>На встрече вы получите свой заказ — всё уже оплачено.</li>
+            </ol>
+            {% elif payment_state == 'pickup' %}
+            <h2 class="section-title">Что дальше</h2>
+            <ol class="mt-4 list-decimal space-y-3 pl-5 text-base leading-7 text-paper/80">
+                <li>Мы свяжемся с вами по телефону или email, чтобы согласовать место и время встречи в Якутске.</li>
+                <li>Оплата — при получении: наличными или переводом на карту, как вам удобно.</li>
+                <li>Напоминание о заказе придёт на {{ masked_email }}.</li>
+            </ol>
+            {% elif payment_state == 'pickup_canceled' or payment_state == 'canceled' %}
+            <h2 class="section-title">Что делать</h2>
+            <p class="mt-4 text-base leading-7 text-paper/80">
+                Если вы не отменяли заказ сами или списание отображается в банке — напишите нам,
+                указав номер заказа #{{ order.id }}, и мы всё проверим. При необходимости можно
+                оформить заказ заново.
+            </p>
+            {% else %}
+            <p class="mx-auto mt-5 max-w-xl text-base leading-8 text-paper/80" id="payment-status-message" role="status" aria-live="polite">
+                ЮKassa ещё подтверждает платёж. Эта страница обновится автоматически; не оплачивайте заказ повторно.
+                Подтверждение будет отправлено на {{ masked_email }}.
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="mx-auto mt-10 max-w-xl text-left">
+            <h2 class="section-title">Остались вопросы?</h2>
+            <p class="mt-4 text-base leading-7 text-paper/80">
+                Напишите нам, указав номер заказа #{{ order.id }}:<br>
+                <a class="underline underline-offset-4" href="https://t.me/Eltoi99999" target="_blank" rel="noopener noreferrer">Telegram</a> ·
+                <a class="underline underline-offset-4" href="https://wa.me/79841134495" target="_blank" rel="noopener noreferrer">WhatsApp +7 984 113-44-95</a> ·
+                <a class="underline underline-offset-4" href="mailto:drevo_eltoi@mail.ru">drevo_eltoi@mail.ru</a>
+            </p>
+        </div>
+
+        <div class="text-center">
+            <a class="line-button mt-10" href="{{ url_for('home') }}">На главную <span aria-hidden="true">↗</span></a>
+        </div>
     </div>
 </section>
 {% if payment_state == 'pending' %}
 <script>
     (() => {
         const statusUrl = {{ url_for('api_order_status', order_id=order.id, token=return_token)|tojson }};
-        const maskedEmail = {{ masked_email|tojson }};
-        const message = document.getElementById('payment-status-message');
-        const heading = document.getElementById('payment-result-title');
         const startTime = Date.now();
 
         const refreshStatus = async () => {
@@ -53,21 +94,19 @@
                 const response = await fetch(statusUrl, { headers: { Accept: 'application/json' } });
                 if (!response.ok) throw new Error('Не удалось проверить состояние платежа.');
                 const result = await response.json();
-                if (result.status === 'paid') {
-                    heading.textContent = 'Оплата принята';
-                    message.textContent = `Подтверждение и дальнейшая информация будут отправлены на ${maskedEmail}.`;
-                    return;
-                }
-                if (result.status === 'canceled') {
-                    heading.textContent = 'Оплата не завершена';
-                    message.textContent = 'Платёж отменён или не прошёл. Заказ не считается оплаченным. Если списание отображается в банке, пожалуйста, свяжитесь с нами.';
+                if (result.status === 'paid' || result.status === 'canceled') {
+                    window.location.reload();
                     return;
                 }
             } catch (error) {
-                message.textContent = 'Не удалось обновить статус. Можно перезагрузить страницу позже.';
+                const message = document.getElementById('payment-status-message');
+                if (message) message.textContent = 'Не удалось обновить статус. Можно перезагрузить страницу позже.';
             }
             if (Date.now() - startTime < 120000) window.setTimeout(refreshStatus, 3000);
-            else message.textContent = 'Платёж ещё обрабатывается. Проверьте статус этой страницы позже — повторная оплата не нужна.';
+            else {
+                const message = document.getElementById('payment-status-message');
+                if (message) message.textContent = 'Платёж ещё обрабатывается. Проверьте статус этой страницы позже — повторная оплата не нужна.';
+            }
         };
 
         window.setTimeout(refreshStatus, 3000);

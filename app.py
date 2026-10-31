@@ -832,48 +832,89 @@ def send_customer_email(order_data):
     message['To'] = order_data['user_email']
     paid = order_data['status'] == 'paid'
     payment_summary = (
-        'Оплата подтверждена.'
+        'Оплата подтверждена. Спасибо!'
         if paid
         else 'Заказ принят. Оплата будет при получении.'
     )
     if order_data['fulfillment_method'] == 'delivery':
         if order_data['delivery_fee'] > 0:
-            fulfillment_summary = (
-                f'Доставка по России включена в заказ: '
-                f'{order_data["delivery_fee"]} ₽. '
+            delivery_summary = (
+                f'Стоимость доставки по России включена в заказ: '
+                f'{order_data["delivery_fee"]} ₽.'
             )
         else:
-            fulfillment_summary = (
+            delivery_summary = (
                 'Стоимость доставки не входит в сумму заказа и оплачивается '
-                'покупателем отдельно перевозчику по его тарифам. '
+                'покупателем отдельно перевозчику по его тарифам.'
             )
-        fulfillment_summary += f'Адрес доставки: {order_data["delivery_address"]}.'
+        next_steps = (
+            '1. В ближайшее время, обычно в течение дня, мы свяжемся с вами '
+            'по телефону или email, чтобы согласовать способ и стоимость доставки.\n'
+            '2. После отправки товара мы пришлём трек-номер для отслеживания '
+            'на этот же email.'
+        )
+    elif order_data['fulfillment_method'] == 'pickup':
+        delivery_summary = f'Получение: самовывоз в Якутске ({PICKUP_LOCATION}).'
+        next_steps = (
+            '1. Мы свяжемся с вами, чтобы согласовать удобное место и время '
+            'встречи.\n'
+            '2. На встрече вы получите заказ.'
+            + ('' if paid else ' Оплата — при получении (наличными или переводом на карту).')
+        )
     else:
-        fulfillment_summary = {
-            'pickup': f'Самовывоз: {PICKUP_LOCATION}.',
-            'event': 'Запись на игру.',
-        }.get(order_data['fulfillment_method'], '')
-    message.set_content(
-        f'Здравствуйте, {order_data["user_name"]}! {payment_summary} '
-        f'Заказ: «{order_data["product_name"]}», количество: '
-        f'{order_data["quantity"]}. Сумма: {order_data["amount"]:.2f} ₽. '
-        f'{fulfillment_summary}'
-    )
+        delivery_summary = 'Получение: участие в игре.'
+        next_steps = (
+            '1. Мы свяжемся с вами с деталями встречи: дата, место и время.\n'
+            '2. Если планы изменятся — напишите нам, перенесём участие на '
+            'другую дату.'
+        )
     event_detail = (
-        f'<p>Дата события: {html.escape(order_data["event_date"])}</p>'
+        f'Дата события: {order_data["event_date"]}.'
         if order_data['event_date']
         else ''
     )
+    contacts = (
+        'Telegram: https://t.me/Eltoi99999\n'
+        'WhatsApp: +7 984 113-44-95 (https://wa.me/79841134495)\n'
+        'Email: drevo_eltoi@mail.ru'
+    )
+    message.set_content(
+        f'Здравствуйте, {order_data["user_name"]}!\n\n'
+        f'{payment_summary}\n\n'
+        f'Детали заказа:\n'
+        f'— Заказ №{order_data["order_id"]}\n'
+        f'— Товар: «{order_data["product_name"]}»\n'
+        f'— Количество: {order_data["quantity"]}\n'
+        f'— Сумма: {order_data["amount"]:.2f} ₽\n'
+        f'{event_detail}\n'
+        f'{delivery_summary}\n\n'
+        f'Что дальше:\n{next_steps}\n\n'
+        f'Если возникнут вопросы, просто ответьте на это письмо или напишите нам:\n'
+        f'{contacts}\n\n'
+        f'С уважением,\nкоманда «Древо Эльтои»'
+    )
+    paid_text = 'Оплата подтверждена' if paid else 'Заказ принят'
     message.add_alternative(
-        '<html><body>'
-        f'<h2>Спасибо за заказ, {html.escape(order_data["user_name"])}!</h2>'
-        f'<p>{html.escape(payment_summary)}</p>'
-        f'<p>Заказ: «{html.escape(order_data["product_name"])}»</p>'
-        f'<p>Количество: {order_data["quantity"]}</p>'
-        f'<p>Сумма: {order_data["amount"]:.2f} ₽</p>'
-        f'<p>{html.escape(fulfillment_summary)}</p>'
-        f'{event_detail}'
-        '<p>Если у вас возникнут вопросы, ответьте на это письмо.</p>'
+        '<html><body style="font-family:Georgia,serif;line-height:1.6;color:#22301f;">'
+        f'<h2>Здравствуйте, {html.escape(order_data["user_name"])}!</h2>'
+        f'<p><strong>{paid_text}.</strong> Спасибо за заказ!</p>'
+        '<h3>Детали заказа</h3>'
+        '<ul>'
+        f'<li>Заказ №{order_data["order_id"]}</li>'
+        f'<li>Товар: «{html.escape(order_data["product_name"])}»</li>'
+        f'<li>Количество: {order_data["quantity"]}</li>'
+        f'<li>Сумма: {order_data["amount"]:.2f} ₽</li>'
+        f'{f"<li>Дата события: {html.escape(event_detail)}</li>" if event_detail else ""}'
+        f'<li>{html.escape(delivery_summary)}</li>'
+        '</ul>'
+        '<h3>Что дальше</h3>'
+        f'<p>{html.escape(next_steps).replace(chr(10), "<br>")}</p>'
+        '<h3>Остались вопросы?</h3>'
+        '<p>Просто ответьте на это письмо или напишите нам:<br>'
+        '<a href="https://t.me/Eltoi99999">Telegram</a> · '
+        '<a href="https://wa.me/79841134495">WhatsApp +7 984 113-44-95</a> · '
+        '<a href="mailto:drevo_eltoi@mail.ru">drevo_eltoi@mail.ru</a></p>'
+        '<p>С уважением,<br>команда «Древо Эльтои»</p>'
         '</body></html>',
         subtype='html',
     )
