@@ -32,7 +32,7 @@
         <div class="photo-carousel" data-photo-carousel aria-label="Дипломы и удостоверения Ольги Товариштай" aria-roledescription="карусель" tabindex="0">
             <div class="photo-carousel__slides">
                 <div class="photo-carousel__track">
-                    {% for number in range(1, 9, +1) %}
+                    {% for number in range(1, 10, +1) %}
                     <img
                         class="photo-carousel__slide"
                         src="{{ url_for('static', filename='diplom' ~ number ~ '.jpg') }}"
