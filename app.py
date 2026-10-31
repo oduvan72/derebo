@@ -825,7 +825,10 @@ def send_customer_email(order_data):
     message['Subject'] = (
         f'Заказ №{order_data["order_id"]} — {order_data["product_name"]}'
     )
-    message['From'] = os.environ.get('SMTP_FROM', smtp_username)
+    message['From'] = (
+        os.environ.get('SMTP_FROM')
+        or os.environ.get('SMTP_USERNAME', '')
+    )
     message['To'] = order_data['user_email']
     paid = order_data['status'] == 'paid'
     payment_summary = (
