@@ -131,10 +131,12 @@
                 </a>
             </nav>
         </div>
+        {% if not checkout_item or checkout_item.item_type != 'product' %}
         <aside class="contact-aside">
             <p class="eyebrow eyebrow--surface">Мы рядом</p>
             <p class="mt-5 max-w-md text-base leading-8 text-paper/80">Мы живём в Якутске и проводим встречи онлайн/офлайн. Возможность очного формата уточняйте при записи.</p>
         </aside>
+        {% endif %}
     </div>
 </section>
 {% if checkout_item and checkout_item.can_checkout %}
