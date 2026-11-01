@@ -493,6 +493,7 @@ def get_events():
         db.select(
             Event.id,
             Event.date,
+            Event.starts_at,
             Game.id,
             Game.title,
             Game.target,
@@ -511,6 +512,12 @@ def get_events():
     return [
         {
             'date': date,
+            'date_iso': starts_at.date().isoformat() if starts_at else None,
+            'time': (
+                starts_at.strftime('%H:%M')
+                if starts_at and starts_at.time() != time.max
+                else None
+            ),
             'event_id': event_id,
             'title': title,
             'target': target,
@@ -522,7 +529,7 @@ def get_events():
                 f'&event_id={event_id}'
             ),
         }
-        for event_id, date, game_id, title, target, desc, capacity, reserved, booked
+        for event_id, date, starts_at, game_id, title, target, desc, capacity, reserved, booked
         in rows
     ]
 

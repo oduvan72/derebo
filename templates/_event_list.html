@@ -1,21 +1,52 @@
-<div class="event-list">
-    {% for event in events %}
-    <article class="event-row">
-        <div class="event-ribbon" aria-hidden="true"></div>
-        <p class="event-month">{{ event.date or event.month }}</p>
-        <div class="event-copy">
-            <h3>{{ event.title }}</h3>
-            {% if event.target %}
-            <p class="event-target">{{ event.target }}</p>
-            {% endif %}
-            <p class="event-description">{{ event.desc }}</p>
-            {% if event.capacity %}
-            <p class="event-target">Свободно мест: {{ event.available_places }} из {{ event.capacity }}</p>
-            {% endif %}
+<div class="calendar" data-calendar>
+    <div class="calendar__toolbar">
+        <p class="calendar__range" data-calendar-range aria-live="polite"></p>
+        <div class="calendar__nav">
+            <button class="calendar__nav-btn" type="button" data-calendar-today>Сегодня</button>
+            <button class="calendar__nav-arrow" type="button" data-calendar-prev aria-label="Предыдущая неделя">←</button>
+            <button class="calendar__nav-arrow" type="button" data-calendar-next aria-label="Следующая неделя">→</button>
         </div>
-        <a class="line-button line-button--small" href="{{ event.link }}">Записаться <span aria-hidden="true">↗</span></a>
-    </article>
-    {% else %}
-    <p class="empty-events">{{ empty_events_message }}</p>
-    {% endfor %}
+    </div>
+
+    <div class="calendar__filter">
+        <select class="calendar__select" data-calendar-filter aria-label="Фильтр по играм">
+            <option value="all">Все игры</option>
+            {% for title in events | map(attribute='title') | unique %}
+            <option value="{{ title }}">{{ title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="calendar__week" data-calendar-week role="group" aria-label="Дни недели"></div>
+
+    <div class="event-table">
+        <div class="event-table__head" aria-hidden="true">
+            <span></span>
+            <span>Время</span>
+            <span>Игра</span>
+            <span>Описание</span>
+            <span>Свободно мест</span>
+            <span></span>
+        </div>
+        <div class="event-list">
+            {% for event in events %}
+            <article class="event-row" data-day="{{ event.date_iso or '' }}" data-game="{{ event.title }}">
+                <div class="event-ribbon" aria-hidden="true"></div>
+                <p class="event-time">{{ event.time or 'весь день' }}</p>
+                <div class="event-copy">
+                    <h3>{{ event.title }}</h3>
+                    {% if event.target %}
+                    <p class="event-target">{{ event.target }}</p>
+                    {% endif %}
+                </div>
+                <p class="event-description">{{ event.desc }}</p>
+                <p class="event-seats">{% if event.capacity %}{{ event.available_places }} / {{ event.capacity }}{% else %}—{% endif %}</p>
+                <a class="line-button line-button--small" href="{{ event.link }}">Записаться <span aria-hidden="true">↗</span></a>
+            </article>
+            {% else %}
+            <p class="empty-events">{{ empty_events_message }}</p>
+            {% endfor %}
+        </div>
+        <p class="empty-events calendar__empty" data-calendar-empty hidden>В этот день встреч нет. Выберите другую дату или игру.</p>
+    </div>
 </div>
