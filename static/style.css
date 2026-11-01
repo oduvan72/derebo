@@ -633,6 +633,20 @@ summary:focus-visible {
     font-size: clamp(1.3rem, 2.4vw, 1.6rem);
 }
 
+.event-weekday {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--color-muted);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+}
+
+.calendar[data-mode="day"] .event-weekday {
+    display: none;
+}
+
 .event-copy h3 {
     margin-top: 0;
 }

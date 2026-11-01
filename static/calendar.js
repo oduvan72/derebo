@@ -38,9 +38,17 @@
     }
 
     var todayISO = toISO(new Date());
-    var selectedDay = rows.length ? rows[0].dataset.day : null;
+    var selectedDay = null;
     var selectedGame = 'all';
-    var monday = selectedDay ? mondayOf(fromISO(selectedDay)) : mondayOf(new Date());
+    var firstDay = rows.length ? rows[0].dataset.day : null;
+    var monday = firstDay ? mondayOf(fromISO(firstDay)) : mondayOf(new Date());
+
+    rows.forEach(function (row) {
+        var label = row.querySelector('[data-weekday]');
+        if (label && row.dataset.day) {
+            label.textContent = WEEKDAY_SHORT[fromISO(row.dataset.day).getDay()];
+        }
+    });
 
     function renderWeek() {
         weekEl.textContent = '';
@@ -76,50 +84,54 @@
     }
 
     function applyFilter() {
+        var weekStart = toISO(monday);
+        var weekEnd = toISO(addDays(monday, 6));
         var visible = 0;
         rows.forEach(function (row) {
-            var dayOk = !selectedDay || !row.dataset.day || row.dataset.day === selectedDay;
+            var day = row.dataset.day;
+            var dayOk;
+            if (selectedDay) {
+                dayOk = !day || day === selectedDay;
+            } else {
+                dayOk = !day || (day >= weekStart && day <= weekEnd);
+            }
             var gameOk = selectedGame === 'all' || row.dataset.game === selectedGame;
             var show = dayOk && gameOk;
             row.hidden = !show;
             if (show) visible += 1;
         });
+        root.dataset.mode = selectedDay ? 'day' : 'week';
+        emptyEl.textContent = selectedDay
+            ? 'В этот день встреч нет. Выберите другую дату или игру.'
+            : 'На этой неделе встреч нет. Выберите другую неделю или игру.';
         emptyEl.hidden = visible > 0;
     }
 
     weekEl.addEventListener('click', function (event) {
         var button = event.target.closest('.calendar__day');
         if (!button) return;
-        selectedDay = button.dataset.date;
+        selectedDay = selectedDay === button.dataset.date ? null : button.dataset.date;
         renderWeek();
         applyFilter();
     });
 
     root.querySelector('[data-calendar-prev]').addEventListener('click', function () {
-        var index = selectedIndex();
         monday = addDays(monday, -7);
-        if (selectedDay) selectedDay = toISO(addDays(monday, index));
+        selectedDay = null;
         renderWeek();
         applyFilter();
     });
 
     root.querySelector('[data-calendar-next]').addEventListener('click', function () {
-        var index = selectedIndex();
         monday = addDays(monday, 7);
-        if (selectedDay) selectedDay = toISO(addDays(monday, index));
+        selectedDay = null;
         renderWeek();
         applyFilter();
     });
 
-    function selectedIndex() {
-        if (!selectedDay) return 0;
-        var current = fromISO(selectedDay);
-        return Math.round((current - monday) / 86400000);
-    }
-
     root.querySelector('[data-calendar-today]').addEventListener('click', function () {
         monday = mondayOf(new Date());
-        selectedDay = todayISO;
+        selectedDay = null;
         renderWeek();
         applyFilter();
     });

@@ -32,7 +32,7 @@
             {% for event in events %}
             <article class="event-row" data-day="{{ event.date_iso or '' }}" data-game="{{ event.title }}">
                 <div class="event-ribbon" aria-hidden="true"></div>
-                <p class="event-time">{{ event.time or 'весь день' }}</p>
+                <p class="event-time"><span class="event-weekday" data-weekday></span>{{ event.time or 'весь день' }}</p>
                 <div class="event-copy">
                     <h3>{{ event.title }}</h3>
                     {% if event.target %}
