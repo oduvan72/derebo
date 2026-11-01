@@ -190,7 +190,7 @@ event_games = db.Table(
 class Game(db.Model):
     id = db.Column(db.String(2), primary_key=True)
     title = db.Column(db.String(200), nullable=False, unique=True)
-    target = db.Column(db.String(200), nullable=False)
+    target = db.Column(db.String(200), nullable=True)
     desc = db.Column(db.Text, nullable=False)
     photos = db.Column(db.JSON, nullable=True)
     price = db.Column(db.Integer, nullable=True)
@@ -295,6 +295,47 @@ def migrate_game_photos():
                 WHERE photos IS NOT NULL AND NOT json_valid(photos)
                 '''
             ))
+
+
+def migrate_game_target_optional():
+    columns = {
+        column['name']: column
+        for column in inspect(db.engine).get_columns('game')
+    }
+    if 'target' not in columns or columns['target']['nullable']:
+        return
+    with db.engine.connect() as connection:
+        # PRAGMA foreign_keys нельзя менять внутри транзакции,
+        # поэтому DDL выполняем единым блоком на свежем соединении.
+        connection.execute(text('PRAGMA foreign_keys=OFF'))
+        connection.execute(text('DROP TABLE IF EXISTS game_new'))
+        connection.execute(text(
+            '''
+            CREATE TABLE game_new (
+                id VARCHAR(2) NOT NULL,
+                title VARCHAR(200) NOT NULL,
+                target VARCHAR(200),
+                "desc" TEXT NOT NULL,
+                photos JSON,
+                "price" INTEGER,
+                "capacity" INTEGER,
+                PRIMARY KEY (id),
+                UNIQUE (title)
+            )
+            '''
+        ))
+        connection.execute(text(
+            '''
+            INSERT INTO game_new
+                (id, title, target, "desc", photos, "price", "capacity")
+            SELECT id, title, target, "desc", photos, "price", "capacity"
+            FROM game
+            '''
+        ))
+        connection.execute(text('DROP TABLE game'))
+        connection.execute(text('ALTER TABLE game_new RENAME TO game'))
+        connection.execute(text('PRAGMA foreign_keys=ON'))
+        connection.commit()
 
 
 def migrate_order_booking_fields():

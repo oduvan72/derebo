@@ -36,6 +36,7 @@ from db import (
     init_db,
     migrate_event_dates,
     migrate_game_photos,
+    migrate_game_target_optional,
     migrate_order_booking_fields,
     migrate_product_details,
     release_reserved_seats,
@@ -99,6 +100,7 @@ with app.app_context():
     db.create_all()
     migrate_product_details()
     migrate_game_photos()
+    migrate_game_target_optional()
     migrate_order_booking_fields()
     migrate_event_dates()
 Configuration.account_id = os.environ.get('YOOKASSA_SHOP_ID', '')

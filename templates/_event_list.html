@@ -5,7 +5,9 @@
         <p class="event-month">{{ event.date or event.month }}</p>
         <div class="event-copy">
             <h3>{{ event.title }}</h3>
+            {% if event.target %}
             <p class="event-target">{{ event.target }}</p>
+            {% endif %}
             <p class="event-description">{{ event.desc }}</p>
             {% if event.capacity %}
             <p class="event-target">Свободно мест: {{ event.available_places }} из {{ event.capacity }}</p>

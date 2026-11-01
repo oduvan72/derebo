@@ -352,8 +352,8 @@ def read_game_form():
     title = form_value('title', 200)
     target = form_value('target', 200)
     description = form_value('desc', 5000)
-    if not title or not target or not description:
-        return None, 'Заполните название, аудиторию и описание игры.'
+    if not title or not description:
+        return None, 'Заполните название и описание игры.'
     price, error = form_positive_int('price', 'Цена')
     if error:
         return None, error

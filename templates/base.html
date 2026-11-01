@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#e8eddf">
     {% set meta_title = page_title ~ ' — Древо Эльтои' %}
-    {% set meta_description = page_description|default(page_title ~ ' — трансформационные игры и бережная работа с корнями Саха, Тувы и Калмыкии.', true)|striptags|truncate(160, true, '…') %}
+    {% set meta_description = page_description|default(page_title ~ '', true)|striptags|truncate(160, true, '…') %}
     {% set meta_image = url_for('static', filename=page_image|default('derevo.jpg', true), _external=true) %}
     <meta name="description" content="{{ meta_description }}">
     <link rel="canonical" href="{{ request.base_url }}">

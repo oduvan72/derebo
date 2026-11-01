@@ -11,9 +11,10 @@
         <input type="text" id="title" name="title" required maxlength="200"
                value="{{ form.get('title', game.title if game else '') }}">
 
-        <label for="target">Целевая аудитория *</label>
-        <input type="text" id="target" name="target" required maxlength="200"
+        <label for="target">Целевая аудитория</label>
+        <input type="text" id="target" name="target" maxlength="200"
                value="{{ form.get('target', game.target if game else '') }}">
+        <p class="hint">Необязательное поле: для кого эта игра.</p>
 
         <label for="price">Цена, ₽</label>
         <input type="number" id="price" name="price" min="1" step="1"
