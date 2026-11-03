@@ -876,9 +876,10 @@ def send_customer_email(order_data):
         else ''
     )
     contacts = (
-        'Telegram: https://t.me/Eltoi99999\n'
-        'WhatsApp: +7 984 113-44-95 (https://wa.me/79841134495)\n'
-        'Email: drevo_eltoi@mail.ru'
+        'Telegram: @Eltoi99999\n'
+        'WhatsApp: +7 984 113-44-95\n'
+        'Email: drevo_eltoi@mail.ru\n'
+        'Страница контактов: drevoeltoi.ru/contact'
     )
     message.set_content(
         f'Здравствуйте, {order_data["user_name"]}!\n\n'
