@@ -914,9 +914,10 @@ def send_customer_email(order_data):
         f'<p>{html.escape(next_steps).replace(chr(10), "<br>")}</p>'
         '<h3>Остались вопросы?</h3>'
         '<p>Просто ответьте на это письмо или напишите нам:<br>'
-        '<a href="https://t.me/Eltoi99999">Telegram</a> · '
-        '<a href="https://wa.me/79841134495">WhatsApp +7 984 113-44-95</a> · '
-        '<a href="mailto:drevo_eltoi@mail.ru">drevo_eltoi@mail.ru</a></p>'
+        'Telegram: @Eltoi99999<br>'
+        'WhatsApp: +7 984 113-44-95<br>'
+        'Email: drevo_eltoi@mail.ru<br>'
+        'Страница контактов: drevoeltoi.ru/contact</p>'
         '<p>С уважением,<br>команда «Древо Эльтои»</p>'
         '</body></html>',
         subtype='html',
